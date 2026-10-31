@@ -1,0 +1,7 @@
+node_modules
+dist
+.next
+pnpm-lock.yaml
+next-env.d.ts
+# Hand-formatted docs (wide tables, ASCII diagrams)
+*.md

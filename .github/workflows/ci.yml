@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    # Repo secrets point at the Neon `test` branch (never production):
+    #   TEST_NEON_AUTH_BASE_URL   `neon neon-auth status --branch test` → Base URL
+    #   TEST_NEON_AUTH_COOKIE_SECRET  any 32+ char random string
+    env:
+      NEON_AUTH_BASE_URL: ${{ secrets.TEST_NEON_AUTH_BASE_URL }}
+      NEON_AUTH_COOKIE_SECRET: ${{ secrets.TEST_NEON_AUTH_COOKIE_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build

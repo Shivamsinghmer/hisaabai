@@ -1,0 +1,10 @@
+.neon
+node_modules/
+.env
+.env.local
+.env.*.local
+.next/
+dist/
+uploads/
+*.tsbuildinfo
+next-env.d.ts
