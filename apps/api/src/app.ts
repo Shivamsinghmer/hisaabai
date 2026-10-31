@@ -10,6 +10,7 @@ import { creditRoutes } from "./routes/credit.js";
 import { collectRoutes } from "./routes/collect.js";
 import { ledgerRoutes } from "./routes/ledger.js";
 import { merchantRoutes } from "./routes/merchants.js";
+import { networkRoutes } from "./routes/network.js";
 import { udhaarRoutes } from "./routes/udhaar.js";
 import { voiceLimits, voiceRoutes } from "./routes/voice.js";
 import type { FileStorage } from "./services/storage.js";
@@ -82,5 +83,6 @@ export async function buildApp({
   const linkBase = payLinkBase ?? `${webOrigin}/pay`;
   collectRoutes(app, { db, ai: aiServices, guards, payLinkBase: linkBase, webOrigin });
   udhaarRoutes(app, { db, guards, payLinkBase: linkBase });
+  networkRoutes(app, { db, ai: aiServices, guards });
   return app;
 }

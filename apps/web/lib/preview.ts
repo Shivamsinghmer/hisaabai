@@ -86,6 +86,84 @@ export function previewFixture(path: string): unknown {
     };
   }
   if (path === "/customers") return { customers };
+  // Paytm profile: real numbers from the seeded demo (Gupta ji pays 3 shops, owes a 4th).
+  if (path.endsWith("/network-profile")) {
+    return path.includes("/c1/")
+      ? { status: "no_consent", phoneMasked: "+91 •••••• 0004" }
+      : {
+          status: "ready",
+          phoneMasked: "+91 •••••• 0001",
+          score: 723,
+          band: "good",
+          pattern: "selective",
+          baseScore: 804,
+          penaltyTotal: 81,
+          factors: [
+            { key: "repayment", label: "Samay par wapasi (on-time repayment)", value: 0.95, weight: 0.4 },
+            {
+              key: "current",
+              label: "Abhi koi purana baaki nahi (nothing long overdue)",
+              value: 0.75,
+              weight: 0.2,
+            },
+            { key: "promises", label: "Vaade nibhaana (promises kept)", value: 0.75, weight: 0.15 },
+            {
+              key: "breadth",
+              label: "Kai dukaanon ka bharosa (good at many shops)",
+              value: 0.67,
+              weight: 0.15,
+            },
+            { key: "tenure", label: "Hisaab ki umar (history)", value: 0.98, weight: 0.1 },
+          ],
+          outstandingPaise: 153000,
+          shops: [
+            {
+              label: "Aapki dukaan",
+              isThisShop: true,
+              standing: "late",
+              onTimeRate: 0.95,
+              outstandingPaise: 33000,
+              overdueDays: 5,
+              historyDays: 176,
+              penalty: 0,
+            },
+            {
+              label: "Dukaan 2 · Noida",
+              isThisShop: false,
+              standing: "good",
+              onTimeRate: 1,
+              outstandingPaise: 0,
+              overdueDays: 0,
+              historyDays: 173,
+              penalty: 0,
+            },
+            {
+              label: "Dukaan 3 · Noida",
+              isThisShop: false,
+              standing: "good",
+              onTimeRate: 1,
+              outstandingPaise: 0,
+              overdueDays: 0,
+              historyDays: 111,
+              penalty: 0,
+            },
+            {
+              label: "Dukaan 4 · Noida",
+              isThisShop: false,
+              standing: "overdue",
+              onTimeRate: 0.86,
+              outstandingPaise: 120000,
+              overdueDays: 75,
+              historyDays: 160,
+              penalty: 81,
+            },
+          ],
+          summary:
+            "Gupta ji ka Paytm score 723 hai, total 4 dukaanon mein se 3 par record theek hai. Aapki dukaan mein ₹330 ka thoda late payment hai (5 din) aur Dukaan 4 · Noida mein ₹1,200 ka 75 din overdue hai. Agar ye overdue settle ho jaye to score 804 tak badh jayega.",
+          advice:
+            "Aap thoda chhota udhaar de sakte hain, lekin dhyan rakhein ki pehle overdue balance clear ho jaye.",
+        };
+  }
   if (path.startsWith("/customers/")) {
     const customer = customers.find((c) => path.endsWith(c.id)) ?? customers[3];
     return {
@@ -155,6 +233,27 @@ export function previewFixture(path: string): unknown {
           startedAt: new Date().toISOString(),
         },
       ],
+    };
+  }
+  if (path === "/credit/score") {
+    return {
+      score: 728,
+      change: 18,
+      factors: [
+        { key: "recovery_rate", value: 0.9, weight: 0.25, points: 0.9, direction: "up" },
+        { key: "sales_consistency", value: 0.62, weight: 0.2, points: 0.62, direction: "up" },
+        { key: "promise_reliability", value: 0.54, weight: 0.15, points: 0.54, direction: "down" },
+        { key: "digital_share", value: 0.6, weight: 0.15, points: 0.6, direction: "up" },
+        { key: "avg_days_to_recover", value: 11.8, weight: 0.1, points: 0.8, direction: "up" },
+        { key: "tenure_months", value: 6.1, weight: 0.1, points: 0.5, direction: "down" },
+        { key: "debtor_concentration", value: 0.57, weight: 0.05, points: 0.1, direction: "down" },
+      ],
+      tips: [
+        "Vaade nibhaiye: promise reliability 54% hai.",
+        "Kuch bade customers par depend na rahein.",
+        "Hisaab 12 mahine tak rakhein, score badhega.",
+      ],
+      computedAt: new Date().toISOString(),
     };
   }
   if (path === "/udhaar-service") {

@@ -95,6 +95,8 @@ export const customers = pgTable(
   (t) => [
     check("customers_trust_level_check", sql`${t.trustLevel} in ('new','regular','trusted','risky')`),
     index().on(t.merchantId),
+    // Paytm customer profile: the same person at other shops, linked by phone.
+    index().on(t.phone),
   ],
 );
 
@@ -362,6 +364,16 @@ export const udhaarServiceTxns = pgTable(
     index().on(t.merchantId),
   ],
 );
+
+// Paytm customer profile consent. Keyed by the customer's normalised phone (+91…), not by
+// shop: the customer agrees once to let every shop they buy from see their cross-shop
+// record. Without a row with granted = true, no shop sees anything from other shops.
+export const customerNetworkConsents = pgTable("customer_network_consents", {
+  phone: text("phone").primaryKey(),
+  granted: boolean("granted").notNull(),
+  grantedAt: timestamp("granted_at", { withTimezone: true }).defaultNow(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+});
 
 // P2 modules
 export const products = pgTable("products", {

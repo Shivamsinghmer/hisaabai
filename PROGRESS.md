@@ -3,8 +3,8 @@
 > Living status of the build. Update this file at the end of every work session.
 > Spec: [`CLAUDE.md`](CLAUDE.md) · Plan: [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md)
 
-**Current phase:** Hackathon sprint — S1–S3 + demo prep + Paytm Udhaar (F4) + design pass done. Next: rehearse; khata photo (S4) only if time remains
-**Last updated:** 2026-10-31 (S3)
+**Current phase:** Hackathon sprint — S1–S3 + demo prep + Paytm Udhaar (F4) + Paytm customer profile + design pass done. Next: rehearse; khata photo (S4) only if time remains
+**Last updated:** 2026-10-31 (Paytm customer profile)
 
 ---
 
@@ -47,6 +47,7 @@
 | 2026-10-31 | **Design system + landing page** | design.md tokens (Ledger Navy, Registry Blue, Network Teal, Mint/Sky Paper, 1px rules, no shadows, square cards, 4px controls) with Tailwind remaps. Fonts: DM Sans for the whole app (legible, lining numerals), Instrument Serif for landing display only (Cormorant drew old-style digits; rejected), IBM Plex Mono for landing notation, Noto Sans Devanagari fallback. Public landing at `/` (signed out). App: Home with navy “Baaki udhaar” hero, bottom nav with icons + active state (Ghar · Khata · mic · Wasooli · Credit), square status tags |
 | 2026-10-31 | **Paytm Udhaar (F4, mock)** | Eligibility per §14 (≥3 months, ≥80% on time via FIFO, no open dispute; limit min(₹5,000, 1.5 × avg ticket) minus outstanding; funded entries excluded). Funding writes the sale + Paytm's instant payment (both `paytm_udhaar`), merchant pays a 1.5% fee (display only), customer repays Paytm on the same public `/pay/:token` page (shop ledger untouched). `/udhaar` screen (owner only) + Home link. Migration `0003` (repay_token). 14 tests |
 | 2026-10-31 | **Sign-in fix** | A wrong password crashed the page (the auth client throws instead of returning `{error}`): all auth calls now wrapped, with clear Hinglish messages. Added **Password bhool gaye?** (emailed code → new password → signed in) |
+| 2026-10-31 | **Paytm customer profile (cross-shop)** | One customer's udhaar record across every shop on Hisaab AI, linked by phone (`normalizePhone`, +91…). **Consent first:** `customer_network_consents` keyed by phone; no row → the shop sees only a consent gate (mock "Anumati maangein" button stands in for the customer's own OTP). Other shops are anonymous ("Dukaan 2 · Noida"), totals only. **Rules compute, LLM explains** (`network/score.ts`): base 300–900 from on-time repayment 40%, nothing >30 days overdue 20%, promises 15%, good at many shops 15%, tenure 10%; then each balance >30 days overdue costs `150 × min(1, days/90) × min(1, 0.5 + 2 × share)`, ×0.2 if disputed, cap 250. Patterns clean / disputed / single / **selective** (pays ≥2 shops, skips one) / widespread. `customer_profile.md` (Groq) writes the summary + advice for the shopkeeper, template fallback. Owner-only `GET /customers/:id/network-profile`, `POST /customers/:id/network-consent`. Web: "Paytm profile" card on the customer page (score, band in words, AI summary, advice, per-shop rows with penalty, "score if settled", how-it-works). Seed: 3 neighbour Noida shops; Gupta ji **723** (804 if Dukaan 4's ₹1,200 × 75 days is paid), Verma ji 875, Sharma ji 794 (disputed), Khan sahab no consent. Migration `0004`. 13 tests; `demo:smoke` Moment 4. Pitch deck: new slide 7 |
 | 2026-10-31 | Dev-only design preview | `PREVIEW_MODE=1 node scripts/next.mjs dev --port 3100` (in `apps/web`) renders signed-in pages with fixtures (`lib/preview.ts`); never active in production builds |
 
 ## In progress
@@ -105,6 +106,8 @@
 | 2026-10-31 | **Payments: in-app mock by default + Paytm staging as a switch** (`PAYTM_MODE=mock\|staging`) | Mock never depends on Paytm or venue Wi-Fi; staging shows judges a real Paytm checkout. Replaces `PAYTM_MOCK`. Staging needs MID + merchant key (Paytm dashboard → API Keys, test mode). Built in Phase 5 |
 | 2026-10-31 | **Scorecard normalisation bounds** | recovery rate, promise %, digital share, consistency raw 0–1; avg days 0 → 1, ≥ 60 → 0; tenure cap 12 months; concentration 0 → 1, ≥ 0.6 → 0; thin-data factors sit at neutral 0.5 (empty shop ≈ 570, offer line 600 intact) |
 | 2026-10-31 | **Offer amount stepped to spoken-friendly figures** | Down to the nearest ₹5,000 for big offers (₹52,000 → ₹50,000 = the §22 demo line), ₹100 steps + ₹500 floor for small ones so tiny shops don't get "NO_OFFER" |
+| 2026-10-31 | **Customer score: rules, not the LLM** | Same score every time and explainable to a lender; the LLM only writes the summary from the computed numbers |
+| 2026-10-31 | **Overdue penalty per shop, not an average** | An average hides one unpaid shop behind three good ones; a dispute counts 20% (disagreement, not refusal) |
 | 2026-10-31 | **Consents: latest decision wins** | `activeConsent` reads the newest row per purpose (grant → revoke → re-grant works), not any live row |
 
 ## Gotchas learned

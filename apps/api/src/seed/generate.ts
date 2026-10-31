@@ -1,7 +1,7 @@
 // Synthetic kirana data (CLAUDE.md §15): 6 months of walk-in sales, udhaar
 // (credit) entries, repayments with realistic delays, and promises kept/broken.
 import { addDays } from "@hisaab/shared";
-import type { customers, ledgerEntries, merchants, promises, users } from "../db/schema.js";
+import type { customers, disputes, ledgerEntries, merchants, promises, users } from "../db/schema.js";
 import { customerName, type PersonName } from "./names.js";
 import type { Rng } from "./random.js";
 
@@ -13,6 +13,7 @@ type UserRow = typeof users.$inferInsert;
 type CustomerRow = typeof customers.$inferInsert;
 type EntryRow = typeof ledgerEntries.$inferInsert;
 type PromiseRow = typeof promises.$inferInsert;
+type DisputeRow = typeof disputes.$inferInsert;
 
 export type SeedBundle = {
   merchant: MerchantRow & { id: string };
@@ -20,6 +21,7 @@ export type SeedBundle = {
   customers: (CustomerRow & { id: string })[];
   entries: EntryRow[];
   promises: PromiseRow[];
+  disputes?: DisputeRow[];
 };
 
 export const HISTORY_DAYS = 183; // ~6 months

@@ -137,6 +137,32 @@ try {
   check("correct teach-back passes", right.passed === true);
   const accepted = (await call("POST", `/credit/offers/${offer.id}/accept`)).body;
   check("offer accepted", ["accepted", "disbursed"].includes(accepted.status), accepted.status);
+
+  console.log("\nMoment 4 — Paytm customer profile");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- rehearsal script reads loose JSON
+  const profileOf = async (name: string): Promise<any> =>
+    (await call("GET", `/customers/${customers.find((c) => c.name === name)!.id}/network-profile`)).body;
+  const gp = await profileOf("Gupta ji");
+  check(
+    "Gupta ji: pays others, owes one shop",
+    gp.status === "ready" && gp.pattern === "selective" && gp.shops.length === 4,
+    `${gp.score} (${gp.band}), ${gp.baseScore} if settled`,
+  );
+  console.log(`    ${gp.summary}\n    → ${gp.advice}`);
+  const vp = await profileOf("Verma ji");
+  check(
+    "Verma ji: trusted everywhere",
+    vp.status === "ready" && vp.pattern === "clean",
+    `${vp.score} (${vp.band})`,
+  );
+  const sp = await profileOf("Sharma ji");
+  check(
+    "Sharma ji: disputed balance",
+    sp.status === "ready" && sp.pattern === "disputed",
+    `${sp.score} (${sp.band})`,
+  );
+  const kp = await profileOf("Khan sahab");
+  check("Khan sahab: consent gate", kp.status === "no_consent");
 } catch (err) {
   console.error("\nRehearsal aborted:", (err as Error).message);
   failures++;

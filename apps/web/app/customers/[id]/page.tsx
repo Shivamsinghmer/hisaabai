@@ -1,8 +1,9 @@
-import { CustomerDetailSchema, formatPaise } from "@hisaab/shared";
+import { CustomerDetailSchema, formatPaise, NetworkProfileSchema, type NetworkProfile } from "@hisaab/shared";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
 import { CollectActions } from "@/components/CollectActions";
+import { NetworkProfileCard } from "@/components/NetworkProfileCard";
 import { PredictionLabel, StatusBadge } from "@/components/StatusBadge";
 import { ApiFailure, apiFetch, requireShop } from "@/lib/api";
 
@@ -16,7 +17,7 @@ const dateFmt = new Intl.DateTimeFormat("en-IN", {
 const showDate = (iso: string) => dateFmt.format(new Date(`${iso}T00:00:00+05:30`));
 
 export default async function CustomerPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireShop();
+  const { membership } = await requireShop();
   const { id } = await params;
   let raw: unknown;
   try {
@@ -26,6 +27,17 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
     throw err;
   }
   const { customer, entries, promises } = CustomerDetailSchema.parse(raw);
+  // Paytm profile is credit information: owners only. A failure here never breaks the page.
+  let profile: NetworkProfile | null = null;
+  if (membership.role === "owner") {
+    try {
+      profile = NetworkProfileSchema.parse(
+        await apiFetch(`/customers/${encodeURIComponent(id)}/network-profile`),
+      );
+    } catch {
+      profile = null;
+    }
+  }
 
   return (
     <AppShell>
@@ -51,6 +63,12 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
       {customer.balancePaise > 0 && (
         <div className="mt-3">
           <CollectActions customerId={customer.id} />
+        </div>
+      )}
+
+      {profile && (
+        <div className="mt-6">
+          <NetworkProfileCard profile={profile} customerId={customer.id} />
         </div>
       )}
 

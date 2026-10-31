@@ -9,8 +9,17 @@
 import { addDays, todayIst } from "@hisaab/shared";
 import { eq, inArray, sql } from "drizzle-orm";
 import { createDb, type Db } from "../db/client.js";
-import { customerBalances, customers, ledgerEntries, merchants, promises, users } from "../db/schema.js";
-import { DEMO_MERCHANT_ID, generateDemoMerchant } from "./demo.js";
+import {
+  customerBalances,
+  customerNetworkConsents,
+  customers,
+  disputes,
+  ledgerEntries,
+  merchants,
+  promises,
+  users,
+} from "../db/schema.js";
+import { DEMO_MERCHANT_ID, DEMO_NETWORK_CONSENTS, DEMO_NETWORK_PHONES, generateDemoBundles } from "./demo.js";
 import { generateMerchant, type Health, type SeedBundle } from "./generate.js";
 import { CITIES, ownerName, shopName } from "./names.js";
 import { rngFor } from "./random.js";
@@ -48,6 +57,7 @@ async function writeBundle(db: Db, b: SeedBundle) {
     await insertBatched(b.customers, (c) => tx.insert(customers).values(c));
     await insertBatched(b.entries, (c) => tx.insert(ledgerEntries).values(c));
     await insertBatched(b.promises, (c) => tx.insert(promises).values(c));
+    if (b.disputes?.length) await tx.insert(disputes).values(b.disputes);
   });
 }
 
@@ -80,7 +90,8 @@ async function main() {
   if (!url) throw new Error("DATABASE_URL_UNPOOLED is not set");
 
   const today = todayIst();
-  const bundles = [...(mode === "all" ? syntheticMerchants(today) : []), generateDemoMerchant(today)];
+  // The demo shop plus three neighbouring shops that share some of its customers (Paytm profile).
+  const bundles = [...(mode === "all" ? syntheticMerchants(today) : []), ...generateDemoBundles(today)];
   const { db, pool } = createDb(url);
   try {
     const ids = bundles.map((b) => b.merchant.id);
@@ -89,6 +100,13 @@ async function main() {
       await writeBundle(db, b);
       process.stdout.write(`\rseeded ${i + 1}/${bundles.length} merchants`);
     }
+    // Paytm profile consents for the demo customers (keyed by phone, so reset them too).
+    await db
+      .delete(customerNetworkConsents)
+      .where(inArray(customerNetworkConsents.phone, DEMO_NETWORK_PHONES));
+    await db
+      .insert(customerNetworkConsents)
+      .values(DEMO_NETWORK_CONSENTS.map((phone) => ({ phone, granted: true })));
     console.log(`\nbranch ${branch}: ${bundles.reduce((n, b) => n + b.entries.length, 0)} ledger entries`);
 
     if (process.env.DEMO_OWNER_EMAIL) await linkDemoOwner(db, process.env.DEMO_OWNER_EMAIL);

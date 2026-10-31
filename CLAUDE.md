@@ -505,6 +505,9 @@ Money is stored as **integer paise** (`BIGINT`). Times in UTC (`TIMESTAMPTZ`), d
 >   (payments settle the oldest credits first), not the minimum due date over all credits.
 > - `consents.purpose` also takes `data_storage` (accepted at onboarding).
 > - Merchant-scoped foreign keys are `NOT NULL` and cascade on merchant delete.
+> - `customer_network_consents (phone PK, granted, granted_at, revoked_at)` and an index on `customers.phone`
+>   for the **Paytm customer profile** (one customer across shops, linked by phone, consent first; rules in
+>   `apps/api/src/network/score.ts`). Added 2026-10-31 at the team's request.
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
