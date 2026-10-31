@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+// `KEY=` in .env.local means "not set", not an empty value.
+const optional = <T extends z.ZodType>(schema: T) =>
+  z.preprocess((value) => (value === "" ? undefined : value), schema.optional());
+
 const EnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().default(4000),
@@ -10,9 +14,9 @@ const EnvSchema = z.object({
   NEON_AUTH_BASE_URL: z.string().url(),
   NEON_AUTH_JWKS_URL: z.string().url(),
   // Upstash Redis: either a TLS URL, or the REST URL + token from the Upstash console.
-  REDIS_URL: z.string().url().optional(),
-  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
-  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
+  REDIS_URL: optional(z.string().url()),
+  UPSTASH_REDIS_REST_URL: optional(z.string().url()),
+  UPSTASH_REDIS_REST_TOKEN: optional(z.string().min(1)),
 });
 
 const parsed = EnvSchema.parse(process.env);

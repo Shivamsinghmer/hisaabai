@@ -24,6 +24,7 @@
 | 2026-10-31 | **Upstash Redis wired** | API derives the TLS `rediss://` URL from `UPSTASH_REDIS_REST_URL` + token (or uses `REDIS_URL`). `/health` → `{postgres: ok, redis: ok, 25 ms}` |
 | 2026-10-31 | `packages/shared` | Money helpers (`rupeesToPaise`, `paiseToRupees`, `formatPaise` with en-IN grouping) + `apiError` (§11 error shape). 8 Vitest tests pass; caught and fixed "₹120.5" → "₹120.50" |
 | 2026-10-31 | Tooling | `git init` (branch `main`, nothing committed yet), ESLint 9 flat config (+ Next rules for web), Prettier, `.editorconfig`, `.nvmrc` (24), `.env.example`, GitHub Actions CI (`.github/workflows/ci.yml`) |
+| 2026-10-31 | `.env.local` completed | All `.env.example` keys present; existing secrets kept; `SARVAM_AI` renamed to `SARVAM_API_KEY`. Sarvam key checked with one TTS call (200). WhatsApp + Paytm vars left empty on purpose |
 | 2026-10-31 | All checks green locally | `pnpm lint` · `pnpm format:check` · `pnpm typecheck` · `pnpm test` · `npm run build` |
 
 ## In progress
@@ -69,6 +70,9 @@
 | 2026-10-31 | ESLint 9 (not 10) | `eslint-config-next` 16 depends on React/import plugins not yet on ESLint 10 |
 | 2026-10-31 | ioredis 5 (not 6) | Proven with BullMQ; v6 is a fresh major |
 | 2026-10-31 | `packages/shared` compiles to `dist` | API runs on plain Node; `pnpm dev`/`typecheck` build it first |
+| 2026-10-31 | Sarvam models: STT `saaras:v4`, TTS `bulbul:v4-flash`, voice `shubh_enhi_ads` | Latest recommended per Sarvam docs; `enhi` = English–Hindi code-mixed persona, fits Hinglish replies. v4-flash voice IDs are `<name>_<lang>_<style>`; v3 short names (`shubh`) don't work on it |
+| 2026-10-31 | Groq text model `openai/gpt-oss-120b` | Production model in Groq's current catalog |
+| 2026-10-31 | **Payments: in-app mock by default + Paytm staging as a switch** (`PAYTM_MODE=mock\|staging`) | Mock never depends on Paytm or venue Wi-Fi; staging shows judges a real Paytm checkout. Replaces `PAYTM_MOCK`. Staging needs MID + merchant key (Paytm dashboard → API Keys, test mode). Built in Phase 5 |
 
 ## Gotchas learned
 
@@ -81,9 +85,13 @@
 - Upstash: BullMQ/ioredis need the TCP endpoint. Same host as the REST URL, port 6379, user `default`, password = REST token.
 - `pg` warns that `sslmode=require` will change meaning in pg v9; switch the URLs to `sslmode=verify-full` at some point.
 - `neon init` also installed Neon skills/MCP for other agents (Gemini, Cline, Copilot, OpenCode) and minted an account-wide Neon API key (id 3484243) for MCP. Revoke with `neon api-keys revoke 3484243` if not wanted.
-- `.env.local` has `SARVAM_AI`; the spec and `.env.example` call it `SARVAM_API_KEY`. Rename before Phase 2.
+- **Don't put `NODE_ENV` in `.env.local`.** The Next launcher loads the file before `next build`; `NODE_ENV=development` made the production build render with development React and crash (`Cannot read properties of null (reading 'useContext')` on `/_global-error`). `scripts/next.mjs` now drops a file-provided `NODE_ENV`.
+- Blank values (`KEY=`) mean "not set": the API's env schema treats empty strings as undefined.
+- **Groq currently has no vision model** (production or preview), so the §12 OCR fallback ("Groq vision") can't be used as written. Decide in Phase 4: Sarvam Vision only, or another vision provider.
 
 ## Open questions
+
+- Paytm staging credentials: get the staging MID + merchant key from the Paytm dashboard before Phase 5 (put them in `.env.local`, never in chat or git).
 
 See `docs/BUILD_PLAN.md` §6. Most urgent:
 - Custom SMTP provider for production auth emails
@@ -94,7 +102,7 @@ See `docs/BUILD_PLAN.md` §6. Most urgent:
 
 ## Blockers
 
-- None.
+- `GROQ_API_KEY` is empty in `.env.local`. Needed from Phase 2 (intent router, extraction).
 
 ## How to run
 

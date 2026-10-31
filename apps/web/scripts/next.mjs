@@ -6,6 +6,12 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const envFile = fileURLToPath(new URL("../../../.env.local", import.meta.url));
-if (existsSync(envFile)) process.loadEnvFile(envFile);
+if (existsSync(envFile)) {
+  const hadNodeEnv = "NODE_ENV" in process.env;
+  process.loadEnvFile(envFile);
+  // Next sets NODE_ENV per command; a value from the file would make
+  // `next build` render with development React and crash prerendering.
+  if (!hadNodeEnv) delete process.env.NODE_ENV;
+}
 
 await import("next/dist/bin/next");

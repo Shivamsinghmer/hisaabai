@@ -212,8 +212,18 @@ a total). Photograph → `fixtures/khata/*.jpg` + `*.expected.json`.
 ### Phase 5 — Collect: reminders + mock payments + jobs (1½ days)
 
 **Person B**
-- `services/paytm.mock.ts`: create token, resolve token, confirm → writes a `payment` ledger entry
-  (`source='upi'`), marks reminder `paid`, creates a notification "Gupta ji ne ₹450 de diye ✓".
+- `services/payments.ts`: one `PaymentLinkProvider` interface (`createLink`, `getStatus`) with two
+  implementations, chosen by `PAYTM_MODE` (default `mock`). Both end in the same `markPaid()` → writes a
+  `payment` ledger entry (`source='upi'`), marks the reminder `paid`, creates a notification
+  "Gupta ji ne ₹450 de diye ✓".
+  - `paytm.mock.ts` (default, demo-safe): token → in-app `/pay/:token` page → confirm.
+  - `paytm.staging.ts`: Paytm Create Link API on `PAYTM_HOST` (`securegw-stage.paytm.in`), body signed with
+    `PAYTM_MERCHANT_KEY` (Paytm checksum, `tokenType: "AES"`), `linkType: FIXED`, amount, `linkOrderId` =
+    our reminder token. Customer pays on Paytm's test cashier with Paytm test instruments (test card, test
+    wallet, or the Paytm Test UPI app). Payment confirmed by (a) `statusCallbackUrl` webhook — needs a public
+    URL (Render or a tunnel), signature verified — or (b) polling the Fetch Transaction API when no public URL
+    (local dev). Confirm the exact endpoint paths and checksum steps against Paytm's docs when building.
+  - Demo: keep `mock` as the fallback; switch to `staging` only after it passes a rehearsal.
 - `jobs/queues.ts`: BullMQ queues + repeatable jobs with IST cron; workers run **inside the API process**
   (Render free has no background workers). Dedupe key = merchant + customer + date.
 - `reminders:due`, `promises:check`, `followups:scheduled` workers.

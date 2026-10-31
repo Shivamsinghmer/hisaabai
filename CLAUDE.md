@@ -420,7 +420,7 @@ large rupee figures, Hindi labels with English sub-labels, high contrast, status
 | ORM/query | Drizzle or Prisma (team's choice; pick one and stick to it) | Migrations committed |
 | Queue/cache | **Redis + BullMQ** | Jobs (§13) + AI response cache |
 | Realtime | Server-Sent Events or WebSocket | Call simulation + live updates |
-| Payments | **Paytm UPI links — mocked** | `PAYTM_MOCK=true` |
+| Payments | **Paytm payment links — in-app mock by default, Paytm staging optional** | `PAYTM_MODE=mock` (in-app `/pay/:token`) or `staging` (Paytm Create Link API on `securegw-stage.paytm.in`, test instruments only) |
 
 **Hard constraints**
 - **No credit card** → free tiers only: Vercel (web), Render (API; sleeps when idle — wake before demo), Neon/Supabase (Postgres), Upstash (Redis). Fallback: local + Cloudflare Tunnel.
@@ -892,9 +892,12 @@ GROQ_TEXT_MODEL=
 GROQ_VISION_MODEL=
 AI_CACHE_TTL_SECONDS=604800
 
-# Payments (mock)
-PAYTM_MOCK=true
+# Payments: mock (in-app /pay/:token) | staging (Paytm test gateway)
+PAYTM_MODE=mock
 PAY_LINK_BASE_URL=http://localhost:3000/pay
+PAYTM_HOST=https://securegw-stage.paytm.in
+PAYTM_MID=
+PAYTM_MERCHANT_KEY=
 
 # Optional WhatsApp test number
 WHATSAPP_TOKEN=
