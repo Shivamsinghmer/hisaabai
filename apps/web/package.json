@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hisaab/shared": "workspace:*",
     "@neon/auth": "0.8.2",
     "next": "16.4.3",
     "react": "19.3.1",

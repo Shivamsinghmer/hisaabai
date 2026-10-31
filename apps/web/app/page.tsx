@@ -1,39 +1,38 @@
-import Link from "next/link";
-import { auth } from "@/lib/auth/server";
+import { AppShell } from "@/components/AppShell";
+import { Label } from "@/components/Label";
+import { requireShop } from "@/lib/api";
+import { t } from "@/lib/strings";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const { data: session } = await auth.getSession();
-  const user = session?.user;
+  const { merchant } = await requireShop();
 
   return (
-    <main className="mx-auto max-w-md p-4">
-      <h1 className="text-3xl font-bold">Hisaab AI</h1>
-      <p className="text-gray-600">Phase 0 skeleton</p>
+    <AppShell>
+      <p className="text-neutral-600">{t.home.greeting(merchant.ownerName)}</p>
+      <h1 className="text-3xl font-bold">{merchant.shopName}</h1>
 
-      <section className="mt-6 rounded-lg border p-4">
-        {user ? (
-          <>
-            <p>
-              Logged in: <strong>{user.email}</strong>
-            </p>
-            <Link
-              href="/me"
-              className="mt-3 inline-flex min-h-12 items-center rounded bg-black px-4 text-white"
-            >
-              Mera hisaab <span className="ml-1 text-sm opacity-75">(My account)</span>
-            </Link>
-          </>
-        ) : (
-          <Link
-            href="/auth/sign-in"
-            className="inline-flex min-h-12 items-center rounded bg-black px-4 text-white"
-          >
-            Login karein <span className="ml-1 text-sm opacity-75">(Sign in)</span>
-          </Link>
-        )}
+      {/* Today's summary — real numbers arrive with the ledger in Phase 3. */}
+      <section aria-label="Today" className="mt-6 grid grid-cols-3 gap-2">
+        {[t.home.todaySales, t.home.udhaarDue, t.home.collected].map((label) => (
+          <div key={label[1]} className="rounded-lg border border-neutral-200 p-3">
+            <p className="text-2xl font-bold">—</p>
+            <Label text={label} className="text-sm font-medium" />
+          </div>
+        ))}
       </section>
-    </main>
+
+      <button
+        type="button"
+        disabled
+        className="mt-6 flex min-h-16 w-full items-center justify-center rounded-lg border-2 border-neutral-900 px-4 text-lg font-semibold disabled:opacity-60"
+      >
+        <Label text={t.home.scanKhata} />
+      </button>
+      <p className="mt-2 text-center text-sm text-neutral-600">
+        {t.home.comingSoon[0]} ({t.home.comingSoon[1]})
+      </p>
+    </AppShell>
   );
 }

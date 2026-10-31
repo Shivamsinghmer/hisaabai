@@ -183,7 +183,7 @@ Each feature lists: **user story · flow · UI · API · data · AI · edge case
 2. `POST /capture/voice` → **Sarvam STT** (Saarika/Saaras, language auto-detect).
 3. Transcript → **Groq LLM** tool call `create_ledger_entry` → strict JSON.
 4. If anything is missing or ambiguous (unknown customer, no amount) → AI asks one short follow-up by voice ("Kaunse Gupta ji? Ramesh Gupta ya Suresh Gupta?").
-5. Entry saved → **Sarvam TTS** confirmation: "Gupta ji ke khate mein ₹120 udhaar jod diya. Ab kul ₹570 baaki."
+5. Entry saved → **Sarvam TTS** confirmation: "Gupta ji ke khate mein ₹120 udhaar jod diya. Ab kul ₹450 baaki."
 6. An **Undo** toast stays on screen for 10 seconds.
 
 **Supported utterances (examples)**
@@ -495,6 +495,16 @@ hisaab-ai/
 ## 10. Data model
 
 Money is stored as **integer paise** (`BIGINT`). Times in UTC (`TIMESTAMPTZ`), displayed in IST.
+
+> **Implemented schema:** `apps/api/src/db/schema.ts` (Drizzle) is authoritative; the SQL below is the
+> original design. Deviations (2026-10-31):
+> - `users` gains `auth_user_id` (Neon Auth user id) and `email`; `users.phone` and `merchants.phone` are
+>   optional, since login is email OTP.
+> - `disputes` gains `merchant_id` (every table is merchant-scoped, §16).
+> - `customer_balances.earliest_due` is the due date of the **oldest credit not yet covered by payments**
+>   (payments settle the oldest credits first), not the minimum due date over all credits.
+> - `consents.purpose` also takes `data_storage` (accepted at onboarding).
+> - Merchant-scoped foreign keys are `NOT NULL` and cascade on merchant delete.
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -820,7 +830,7 @@ Real Paytm data isn't available, so `apps/api/src/seed` generates a believable d
 - **50 merchants** across 5 cities (Noida, Delhi, Kanpur, Lucknow, Jaipur), with mixed health: ~30% strong, ~50% average, ~20% weak.
 - Each with **20–60 customers** (Indian names with "ji/didi/bhaiya" variants as aliases).
 - **6 months** of data: daily walk-in sales (UPI share 30–80%), udhaar entries (₹20–₹2,000), payments with realistic delays, ~25% of customers slow, ~8% risky; promises kept/broken; festival spikes (Diwali, Holi).
-- One **demo merchant**: "Sharma General Store" (owner Ramesh Sharma), score ~700, customers Gupta ji (₹450 due), Verma ji, Meena didi, Khan sahab, etc., set up to match the demo script (§22).
+- One **demo merchant**: "Sharma General Store" (owner Ramesh Sharma), score ~700, customers Gupta ji (seeded at ₹330 due; the demo's voice entry of ₹120 brings it to the ₹450 the AI call quotes), Verma ji, Meena didi, Khan sahab, etc., set up to match the demo script (§22).
 - `fixtures/khata/` holds 3–5 handwritten khata page photos made by the team, with expected outputs for tests.
 
 Commands: `pnpm seed` (all), `pnpm seed:demo` (demo merchant only, resettable before each demo).

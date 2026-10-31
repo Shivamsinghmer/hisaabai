@@ -3,7 +3,7 @@
 > Living status of the build. Update this file at the end of every work session.
 > Spec: [`CLAUDE.md`](CLAUDE.md) · Plan: [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md)
 
-**Current phase:** Phase 0 done (pending first commit + GitHub repo) → next: Phase 1 — Data, seed, onboarding
+**Current phase:** Phase 1 done → next: Phase 2 — Voice layer + intent router (needs `GROQ_API_KEY`)
 **Last updated:** 2026-10-31
 
 ---
@@ -23,31 +23,42 @@
 | 2026-10-31 | Neon branches `dev` + `test` | Both from `production`, never expire (`neon.ts` policy). Auth + email-OTP config copied. Local `.env.local` now points at **`dev`** |
 | 2026-10-31 | **Upstash Redis wired** | API derives the TLS `rediss://` URL from `UPSTASH_REDIS_REST_URL` + token (or uses `REDIS_URL`). `/health` → `{postgres: ok, redis: ok, 25 ms}` |
 | 2026-10-31 | `packages/shared` | Money helpers (`rupeesToPaise`, `paiseToRupees`, `formatPaise` with en-IN grouping) + `apiError` (§11 error shape). 8 Vitest tests pass; caught and fixed "₹120.5" → "₹120.50" |
-| 2026-10-31 | Tooling | `git init` (branch `main`, nothing committed yet), ESLint 9 flat config (+ Next rules for web), Prettier, `.editorconfig`, `.nvmrc` (24), `.env.example`, GitHub Actions CI (`.github/workflows/ci.yml`) |
+| 2026-10-31 | Tooling | `git init` (branch `main`), ESLint 9 flat config (+ Next rules for web), Prettier, `.editorconfig`, `.nvmrc` (24), `.env.example`, GitHub Actions CI (`.github/workflows/ci.yml`) |
 | 2026-10-31 | `.env.local` completed | All `.env.example` keys present; existing secrets kept; `SARVAM_AI` renamed to `SARVAM_API_KEY`. Sarvam key checked with one TTS call (200). WhatsApp + Paytm vars left empty on purpose |
 | 2026-10-31 | All checks green locally | `pnpm lint` · `pnpm format:check` · `pnpm typecheck` · `pnpm test` · `npm run build` |
+| 2026-10-31 | Phase 0 committed | `4f01489`, `447a03a` |
+| 2026-10-31 | **Phase 1: shared parsers** | `parseAmountRupees` (digits, Hindi number words 1–99, sau/hazaar/lakh, dedh/dhai/sawa/saade/paune; skips quantities like "do kilo" and the verb "hata do") and `resolveDate` (aaj/kal/parso by direction, "5 din mein", weekdays, agle hafte/mahine, "12/9", "12 Sep"; IST). 68 shared tests |
+| 2026-10-31 | **Phase 1: schema + migrations** | Drizzle schema for all §10 tables + `customer_balances` view (FIFO earliest due). Migrations `0000`, `0001` applied to Neon `dev` and `test` via `src/db/migrate.ts` (direct URL) |
+| 2026-10-31 | **Phase 1: API** | `buildApp()` factory; auth guards `authenticate` / `requireMerchant` / `requireOwner` (merchantId always from the membership, never the body); §11 error handler; `GET /me`, `POST /merchants` (owner + consent in one transaction), `PATCH /me/settings` (owner only). Shared zod contracts in `packages/shared/src/schemas/merchant.ts` |
+| 2026-10-31 | **Phase 1: integration tests** | 12 tests on the Neon `test` branch (stub token verifier, real DB): 401s, onboarding, 409 on second shop, consent required, unknown fields rejected, owner settings, **helper → 403 OWNER_ONLY**, ONBOARDING_REQUIRED, cross-shop isolation, validation. Refuses to run unless `NEON_BRANCH=test`; cleans up after itself |
+| 2026-10-31 | **Phase 1: seed** | `pnpm seed` (50 merchants × 20–60 customers × 6 months, 5 cities, 30/50/20 health mix, festival bumps) and `pnpm seed:demo` (resettable). Deterministic ids; deletes only its own rows. On `dev`: 51 merchants, ~2,100 customers, ~83k entries, promises 57% kept / 35% broken / 8% open. Demo shop: walk-in ₹61–70k/month, 60% UPI; **Gupta ji ₹330** (overdue), Verma ji ₹600, Sharma ji ₹750, Khan sahab ₹1,200 (broken promise) |
+| 2026-10-31 | Onboarding verified by hand on `dev` | Real sign-in → language (Hinglish) → shop → consent → Home; DB has the shop, owner membership linked to the Neon Auth user, and the `data_storage` consent |
+| 2026-10-31 | **Phase 1: web** | Server-side `lib/api.ts` (mints a JWT per call), `lib/strings.ts` (Hinglish + English), `AppShell` (bottom nav, centre mic slot), Home (redirects to onboarding without a shop), onboarding: language → shop → consent → Home (4 screens incl. sign-in). Signed-out `/`, `/me`, `/onboarding` → sign-in |
 
 ## In progress
 
-- Nothing running. Phase 0 ends with the first commit.
+- Nothing in progress.
 
 ## Next up
 
-1. First commit; create the GitHub repo and add CI secrets (see below).
-2. Phase 1 — Drizzle schema (§10) + migrations on Neon `dev`, merchant scoping helpers, seed (`pnpm seed`, `pnpm seed:demo`), onboarding (language → shop name → consent) after email sign-up.
-3. Hindi number parser + dates in `packages/shared` (Person C, Phase 1).
+1. Create the GitHub repo and add CI secrets (see below).
+2. Phase 2 — Sarvam STT/TTS wrappers with cache/timeout/retry, Groq client (needs `GROQ_API_KEY`), prompt loader, intent router, `POST /voice/command`, MicButton.
+3. Set `DEMO_OWNER_EMAIL` and run `pnpm seed:demo` to log in as Ramesh (Sharma General Store).
 
 ### CI secrets to add in GitHub (Settings → Secrets → Actions)
 
 | Secret | Value |
 |---|---|
+| `TEST_DATABASE_URL` | `neon connection-string test --pooled` |
+| `TEST_DATABASE_URL_UNPOOLED` | `neon connection-string test` |
 | `TEST_NEON_AUTH_BASE_URL` | `neon neon-auth status --branch test` → Base URL |
+| `TEST_NEON_AUTH_JWKS_URL` | `neon neon-auth status --branch test` → JWKS URL |
 | `TEST_NEON_AUTH_COOKIE_SECRET` | any 32+ char random string |
 
 ## Backlog (by phase, from BUILD_PLAN)
 
 - [x] Phase 0 — Repo and tooling
-- [ ] Phase 1 — Data, seed, auth (auth done; schema, seed, onboarding left)
+- [x] Phase 1 — Data, seed, auth
 - [ ] Phase 2 — Voice layer + intent router
 - [ ] Phase 3 — Voice capture + ledger/customer screens
 - [ ] Phase 4 — Khata photo capture
@@ -72,9 +83,17 @@
 | 2026-10-31 | `packages/shared` compiles to `dist` | API runs on plain Node; `pnpm dev`/`typecheck` build it first |
 | 2026-10-31 | Sarvam models: STT `saaras:v4`, TTS `bulbul:v4-flash`, voice `shubh_enhi_ads` | Latest recommended per Sarvam docs; `enhi` = English–Hindi code-mixed persona, fits Hinglish replies. v4-flash voice IDs are `<name>_<lang>_<style>`; v3 short names (`shubh`) don't work on it |
 | 2026-10-31 | Groq text model `openai/gpt-oss-120b` | Production model in Groq's current catalog |
+| 2026-10-31 | Demo: Gupta ji seeded at **₹330** → voice +₹120 → **₹450** (AI call quote) | Team decision; resolves the §22 vs F1.2 mismatch. CLAUDE.md F1.2 + §15 updated |
+| 2026-10-31 | Schema deviations from §10 (listed in the CLAUDE.md §10 note) | Email login (auth_user_id, optional phone), disputes.merchant_id, FIFO earliest_due, data_storage consent |
+| 2026-10-31 | Meena didi **not** seeded for the demo shop | F1.2 "Naya customer Meena didi…" must create her; §15 listed her as existing |
+| 2026-10-31 | Migrations via `src/db/migrate.ts` (Drizzle migrator), not `drizzle-kit migrate` | drizzle-kit exited without an error message on Neon; the script prints errors and also suits Render |
+| 2026-10-31 | Language codes: Sarvam BCP-47 + `hi-Latn` for Hinglish | One list in `packages/shared` for onboarding and settings |
 | 2026-10-31 | **Payments: in-app mock by default + Paytm staging as a switch** (`PAYTM_MODE=mock\|staging`) | Mock never depends on Paytm or venue Wi-Fi; staging shows judges a real Paytm checkout. Replaces `PAYTM_MOCK`. Staging needs MID + merchant key (Paytm dashboard → API Keys, test mode). Built in Phase 5 |
 
 ## Gotchas learned
+
+- **drizzle-kit:** a `pgView(...).as(sql...)` *is* emitted into the generated migration (don't also hand-write it). `drizzle-kit migrate` exited 1 with no message on Neon; use `pnpm db:migrate` (`src/db/migrate.ts`). drizzle-kit's config loader has no `import.meta.dirname`, so the config resolves paths from `process.cwd()` (apps/api).
+- **Seed promise realism:** promises always set before the payment date made ~77% "broken"; now ~60% of paying customers name a date they meet.
 
 - **Re-signing up with an existing email** returns a placeholder user (`token: null`, random id, nothing in the DB) and sends **no** email; this hides whether an email is registered. Use **Login** for existing emails; an unverified account gets a fresh code there.
 - Neon managed Auth with `send_verification_email_on_sign_up: true` + method `otp` did **not** send a code on sign-up. `emailOtp.sendVerificationOtp({ email, type: "email-verification" })` does (5-minute expiry). The sign-in page calls it after sign-up and after an `EMAIL_NOT_VERIFIED` sign-in.

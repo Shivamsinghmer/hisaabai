@@ -18,8 +18,9 @@ export default function SignInPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
+  // Home sends users without a shop to onboarding.
   function done() {
-    router.push("/me");
+    router.push("/");
     router.refresh();
   }
 
