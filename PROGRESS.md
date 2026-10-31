@@ -3,7 +3,7 @@
 > Living status of the build. Update this file at the end of every work session.
 > Spec: [`CLAUDE.md`](CLAUDE.md) · Plan: [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md)
 
-**Current phase:** Phase 1 done → next: Phase 2 — Voice layer + intent router (needs `GROQ_API_KEY`)
+**Current phase:** Hackathon sprint — Phase 2 done → S1 voice capture → ledger. **Jury demo after ~4 more hours of building** (sprint plan at the top of `docs/BUILD_PLAN.md`)
 **Last updated:** 2026-10-31
 
 ---
@@ -32,12 +32,15 @@
 | 2026-10-31 | **Phase 1: API** | `buildApp()` factory; auth guards `authenticate` / `requireMerchant` / `requireOwner` (merchantId always from the membership, never the body); §11 error handler; `GET /me`, `POST /merchants` (owner + consent in one transaction), `PATCH /me/settings` (owner only). Shared zod contracts in `packages/shared/src/schemas/merchant.ts` |
 | 2026-10-31 | **Phase 1: integration tests** | 12 tests on the Neon `test` branch (stub token verifier, real DB): 401s, onboarding, 409 on second shop, consent required, unknown fields rejected, owner settings, **helper → 403 OWNER_ONLY**, ONBOARDING_REQUIRED, cross-shop isolation, validation. Refuses to run unless `NEON_BRANCH=test`; cleans up after itself |
 | 2026-10-31 | **Phase 1: seed** | `pnpm seed` (50 merchants × 20–60 customers × 6 months, 5 cities, 30/50/20 health mix, festival bumps) and `pnpm seed:demo` (resettable). Deterministic ids; deletes only its own rows. On `dev`: 51 merchants, ~2,100 customers, ~83k entries, promises 57% kept / 35% broken / 8% open. Demo shop: walk-in ₹61–70k/month, 60% UPI; **Gupta ji ₹330** (overdue), Verma ji ₹600, Sharma ji ₹750, Khan sahab ₹1,200 (broken promise) |
+| 2026-10-31 | **Phase 2: voice layer** | AI plumbing (`services/aiCall.ts`: 10 s timeout, 1 retry, Redis cache, logs without personal data), Sarvam STT (`saaras:v4`, mode `translit`, customer names as keyterms) + TTS (`bulbul:v4-flash`, MP3 files named by content hash = cache), Groq JSON mode (`gpt-oss-120b`, reasoning low, zod + one repair), prompt loader (`src/prompts/*.md`, versioned, copied to dist), `AI_MOCK` offline fixtures, intent router (falls back to keyword rules if Groq fails), `POST /voice/command` (audio or typed text), `POST /voice/tts`, `GET /media/tts/:name`. Web: `MicButton` (push-to-talk, waveform, 30 s cap, slide-to-cancel, haptics, keyboard), result sheet with spoken reply, typed fallback |
+| 2026-10-31 | Phase 2 tests | 17 new API tests (mock AI): intents, ₹ read-back, not-understood, audio upload, silence, 415, helper owner-only reply, TTS/media caching, path tricks; aiCall cache/retry/timeout/no-PII logging. **Live test** (`pnpm --filter @hisaab/api test:live`): real Sarvam + Groq, typed loan question → credit + MP3; TTS audio → STT "Gupta ji…" → capture → "₹120" |
 | 2026-10-31 | Onboarding verified by hand on `dev` | Real sign-in → language (Hinglish) → shop → consent → Home; DB has the shop, owner membership linked to the Neon Auth user, and the `data_storage` consent |
 | 2026-10-31 | **Phase 1: web** | Server-side `lib/api.ts` (mints a JWT per call), `lib/strings.ts` (Hinglish + English), `AppShell` (bottom nav, centre mic slot), Home (redirects to onboarding without a shop), onboarding: language → shop → consent → Home (4 screens incl. sign-in). Signed-out `/`, `/me`, `/onboarding` → sign-in |
 
 ## In progress
 
-- Nothing in progress.
+- S1: voice capture → ledger (see sprint plan).
+- Manual check: hold the mic on Home in a real browser and speak (Phase 2 UI not clicked through yet).
 
 ## Next up
 
@@ -59,7 +62,7 @@
 
 - [x] Phase 0 — Repo and tooling
 - [x] Phase 1 — Data, seed, auth
-- [ ] Phase 2 — Voice layer + intent router
+- [x] Phase 2 — Voice layer + intent router
 - [ ] Phase 3 — Voice capture + ledger/customer screens
 - [ ] Phase 4 — Khata photo capture
 - [ ] Phase 5 — Collect: reminders + mock payments + jobs
@@ -121,7 +124,7 @@ See `docs/BUILD_PLAN.md` §6. Most urgent:
 
 ## Blockers
 
-- `GROQ_API_KEY` is empty in `.env.local`. Needed from Phase 2 (intent router, extraction).
+- None.
 
 ## How to run
 

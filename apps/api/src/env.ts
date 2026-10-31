@@ -17,9 +17,27 @@ const EnvSchema = z.object({
   REDIS_URL: optional(z.string().url()),
   UPSTASH_REDIS_REST_URL: optional(z.string().url()),
   UPSTASH_REDIS_REST_TOKEN: optional(z.string().min(1)),
+
+  // Files (TTS audio now, khata photos later). Local disk in dev.
+  UPLOAD_DIR: z.string().default("./uploads"),
+
+  // AI. AI_MOCK=true swaps every provider for offline fixtures (tests, demo fallback).
+  AI_MOCK: z.preprocess((v) => v === "true" || v === "1", z.boolean()).default(false),
+  AI_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(604_800),
+  SARVAM_API_KEY: optional(z.string().min(1)),
+  SARVAM_STT_MODEL: z.string().default("saaras:v4"),
+  // translit = Hindi in Latin script ("ek sau bees"), which the amount parser and prompts expect.
+  SARVAM_STT_MODE: z.enum(["transcribe", "translit", "codemix", "verbatim", "translate"]).default("translit"),
+  SARVAM_TTS_MODEL: z.string().default("bulbul:v4-flash"),
+  SARVAM_TTS_VOICE: z.string().default("shubh_enhi_ads"),
+  GROQ_API_KEY: optional(z.string().min(1)),
+  GROQ_TEXT_MODEL: z.string().default("openai/gpt-oss-120b"),
 });
 
 const parsed = EnvSchema.parse(process.env);
+if (!parsed.AI_MOCK && (!parsed.SARVAM_API_KEY || !parsed.GROQ_API_KEY)) {
+  throw new Error("SARVAM_API_KEY and GROQ_API_KEY are required unless AI_MOCK=true");
+}
 
 /**
  * BullMQ/ioredis need the TCP endpoint, not REST. Upstash serves both on the

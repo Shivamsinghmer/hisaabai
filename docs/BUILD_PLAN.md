@@ -5,6 +5,34 @@
 
 ---
 
+## ⏱ Hackathon sprint (replaces the 14-day timeline below) — decided 2026-10-31
+
+The prototype is shown to the jury after **6–7 hours of building**; about 2.5 hours were spent on
+Phases 0–2. The remaining ~4 hours build **only the three demo moments in §22**, in this order.
+Everything else in this file stays as the post-hackathon roadmap.
+
+**Done (Phases 0–2):** monorepo, Neon + Neon Auth (email OTP) + Upstash, schema + seed + demo shop
+(Gupta ji ₹330), onboarding, voice layer (Sarvam STT/TTS, Groq intent router, MicButton).
+
+| # | Slot | Build | Demo moment |
+|---|---|---|---|
+| S1 | ~45 min | **Voice capture → ledger:** extraction prompt (Groq) + amount cross-check, fuzzy customer match, create customer on "naya customer", payment entries, spoken confirmation with new balance ("Ab kul ₹450 baaki"), 10 s undo. Customers list + customer page (balance, history). Real numbers on Home | 1 |
+| S2 | ~60 min | **Collect:** dues list (overdue first); "Remind" → gentle/firm message + mock pay link → `/pay/:token` page records the payment; **"Call (AI)"** → two-tab call sim (polling, not SSE): agent speaks, customer tab talks back, Groq classifies (pay/promise/partial/dispute/busy), "Friday ko dunga" → promise row + scheduled follow-up shown, transcript saved | 2 |
+| S3 | ~60 min | **Credit:** §14 scorecard (pure function, on demand) → `/credit` (score, top factors, tips); voice "Mujhe loan mil sakta hai?" → score + reason → consent → offer (§14 rules, computed EMI) → teach-back (Groq extracts the numbers, code compares ±10%) → accepted | 3 |
+| S4 | ~30 min | **Khata photo (stretch):** Sarvam Vision → rows → review → save. If it doesn't fit, the demo starts at the voice entry | 1 |
+| S5 | ~30 min | **Demo hardening:** `seed:demo` linked to the demo login, warm the TTS cache for scripted lines, phone access over HTTPS (Cloudflare quick tunnel; the mic needs HTTPS on a phone), rehearse, record backup video | all |
+
+**Cut for the prototype** (still in the roadmap): BullMQ/cron jobs (on-demand buttons instead),
+SSE (polling), LangGraph (plain functions), Paytm staging (in-app mock link only), WhatsApp sending
+(copy-text only), PWA/offline queue, Ask, Stock, Comply, Udhaar-as-a-Service, notifications centre,
+Vercel/Render deploy (run on the laptop + tunnel; deploy only if time is left), CI secrets.
+
+**Numbers used in the demo:** Gupta ji ₹330 → voice +₹120 → call quotes ₹450. Loan offer uses the
+§14 rules with rates 24% / 21% / 18% by band and the **computed** EMI (≈ ₹8,850/month for ₹50,000
+over 6 months at 21%), so the §22 line "₹9,100 mahina" is spoken as the computed figure.
+
+---
+
 ## 0. Locked decisions
 
 | Decision | Choice | Why |

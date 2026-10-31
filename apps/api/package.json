@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=../../.env.local src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node scripts/copy-prompts.mjs",
     "start": "node --env-file-if-exists=../../.env.local dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
@@ -13,7 +13,8 @@
     "db:migrate:test": "tsx --env-file-if-exists=../../.env.test.local src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "seed": "tsx --env-file-if-exists=../../.env.local src/seed/index.ts all",
-    "seed:demo": "tsx --env-file-if-exists=../../.env.local src/seed/index.ts demo"
+    "seed:demo": "tsx --env-file-if-exists=../../.env.local src/seed/index.ts demo",
+    "test:live": "cross-env LIVE_AI=1 vitest run test/voice.live.test.ts"
   },
   "dependencies": {
     "@fastify/cors": "11.3.1",
@@ -23,7 +24,8 @@
     "ioredis": "5.11.1",
     "jose": "6.2.14",
     "pg": "8.23.1",
-    "zod": "4.6.7"
+    "zod": "4.6.7",
+    "@fastify/multipart": "10.1.6"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
