@@ -1,6 +1,6 @@
 import type { DueStatus } from "@hisaab/shared";
 
-// Status always in words + colour, never colour alone (§6). Square mono tags, never pills.
+// Status always in words + colour, never colour alone (§6). Square tags, never pills.
 const STATUS: Record<DueStatus, { label: string; english: string; className: string }> = {
   overdue: { label: "Der ho gayi", english: "Overdue", className: "bg-red-100 text-red-800" },
   due: { label: "Baaki", english: "Due", className: "bg-amber-100 text-amber-900" },
@@ -17,13 +17,13 @@ const PREDICTION = {
 export function StatusBadge({ status }: { status: DueStatus }) {
   const s = STATUS[status];
   return (
-    <span className={`mono inline-block px-2 py-0.5 text-[12px] ${s.className}`}>
-      {s.label} · {s.english}
+    <span className={`inline-block px-2 py-0.5 text-[13px] font-semibold ${s.className}`}>
+      {s.label} <span className="font-normal opacity-75">· {s.english}</span>
     </span>
   );
 }
 
 export function PredictionLabel({ prediction }: { prediction: keyof typeof PREDICTION | null }) {
   if (!prediction) return null;
-  return <span className="mono text-[12px] text-quiet-gray">{PREDICTION[prediction]}</span>;
+  return <span className="text-[13px] text-quiet-gray">{PREDICTION[prediction]}</span>;
 }

@@ -71,7 +71,8 @@ async function call<T = any>(method: "GET" | "POST", url: string, payload?: unkn
   if (payload !== undefined) opts.payload = payload as InjectOptions["payload"];
   const res = await app.inject(opts);
   const ms = Date.now() - started;
-  if (res.statusCode >= 400) throw new Error(`${method} ${url} → ${res.statusCode} ${res.body.slice(0, 200)}`);
+  if (res.statusCode >= 400)
+    throw new Error(`${method} ${url} → ${res.statusCode} ${res.body.slice(0, 200)}`);
   return { body: res.json() as T, ms };
 }
 function check(label: string, ok: boolean, detail = "") {
@@ -81,17 +82,27 @@ function check(label: string, ok: boolean, detail = "") {
 
 try {
   console.log("\nMoment 1 — voice entry");
-  const customers = (await call<{ customers: { id: string; name: string; balancePaise: number }[] }>("GET", "/customers")).body.customers;
+  const customers = (
+    await call<{ customers: { id: string; name: string; balancePaise: number }[] }>("GET", "/customers")
+  ).body.customers;
   const gupta = customers.find((c) => c.name === "Gupta ji")!;
   check("Gupta ji starts at ₹330", gupta.balancePaise === 33000, formatPaise(gupta.balancePaise));
   const entry = await call("POST", "/voice/command", { text: "Gupta ji, do kilo chawal, 120 udhaar" });
   check("entry saved, balance ₹450", entry.body.entry?.balancePaise === 45000, `${entry.ms} ms`);
-  check("spoken reply", entry.body.replyText === "Gupta ji ke khate mein ₹120 udhaar jod diya. Ab kul ₹450 baaki.", entry.body.replyText);
+  check(
+    "spoken reply",
+    entry.body.replyText === "Gupta ji ke khate mein ₹120 udhaar jod diya. Ab kul ₹450 baaki.",
+    entry.body.replyText,
+  );
   check("audio ready", Boolean(entry.body.replyAudioUrl));
 
   console.log("\nMoment 2 — collect + AI call");
   const reminder = await call("POST", "/collect/remind", { customerId: gupta.id });
-  check("reminder with pay link", reminder.body.reminder.message.includes("/pay/"), reminder.body.reminder.tone);
+  check(
+    "reminder with pay link",
+    reminder.body.reminder.message.includes("/pay/"),
+    reminder.body.reminder.tone,
+  );
   const started = await call("POST", "/calls", { customerId: gupta.id });
   const callId = started.body.call.id as string;
   check("agent quotes ₹450", started.body.call.transcript[0].text.includes("₹450"), `${started.ms} ms`);
@@ -108,11 +119,21 @@ try {
   check("spoken score + reason", ask.body.replyText.includes("Aapka score"), ask.body.replyText.slice(0, 90));
   await call("POST", "/consents", { purpose: "lending" });
   const offer = (await call("POST", "/credit/offers")).body.offer;
-  check("offer ₹50,000 for 6 months", offer.amountPaise === 5_000_000 && offer.tenureMonths === 6, `${formatPaise(offer.amountPaise)} @ ${offer.annualRatePct}%`);
+  check(
+    "offer ₹50,000 for 6 months",
+    offer.amountPaise === 5_000_000 && offer.tenureMonths === 6,
+    `${formatPaise(offer.amountPaise)} @ ${offer.annualRatePct}%`,
+  );
   console.log(`    EMI ${formatPaise(offer.emiPaise)} / month`);
-  const wrong = (await call("POST", `/credit/offers/${offer.id}/teach-back`, { text: "har mahine 20 hazaar, nau mahine" })).body;
+  const wrong = (
+    await call("POST", `/credit/offers/${offer.id}/teach-back`, { text: "har mahine 20 hazaar, nau mahine" })
+  ).body;
   check("wrong teach-back re-explained", wrong.passed === false && wrong.replyText.includes("6 mahine"));
-  const right = (await call("POST", `/credit/offers/${offer.id}/teach-back`, { text: `har mahine ${Math.round(offer.emiPaise / 100)}, 6 mahine` })).body;
+  const right = (
+    await call("POST", `/credit/offers/${offer.id}/teach-back`, {
+      text: `har mahine ${Math.round(offer.emiPaise / 100)}, 6 mahine`,
+    })
+  ).body;
   check("correct teach-back passes", right.passed === true);
   const accepted = (await call("POST", `/credit/offers/${offer.id}/accept`)).body;
   check("offer accepted", ["accepted", "disbursed"].includes(accepted.status), accepted.status);
@@ -125,5 +146,7 @@ try {
   redis?.disconnect();
 }
 
-console.log(failures === 0 ? "\nAll demo moments passed. Caches are warm." : `\n${failures} check(s) failed.`);
+console.log(
+  failures === 0 ? "\nAll demo moments passed. Caches are warm." : `\n${failures} check(s) failed.`,
+);
 process.exit(failures === 0 ? 0 : 1);

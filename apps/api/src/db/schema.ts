@@ -350,6 +350,8 @@ export const udhaarServiceTxns = pgTable(
     status: text("status")
       .default("offered")
       .$type<"offered" | "funded" | "repaying" | "closed" | "defaulted">(),
+    // Mock UPI link the customer uses to repay Paytm (not the shop).
+    repayToken: text("repay_token").unique(),
     createdAt: createdAt(),
   },
   (t) => [

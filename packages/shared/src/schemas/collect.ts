@@ -38,10 +38,12 @@ export type CollectDashboard = z.infer<typeof CollectDashboardSchema>;
 
 /** Public mock UPI page (§F2.1 step 4). */
 export const PayInfoSchema = z.object({
+  /** "paytm_udhaar": the customer is repaying Paytm for a funded udhaar (F4), not the shop. */
+  kind: z.enum(["reminder", "paytm_udhaar"]).default("reminder"),
   shopName: z.string(),
   customerName: z.string(),
   amountPaise: z.number(),
-  status: z.enum(["queued", "sent", "paid", "ignored"]),
+  status: z.enum(["queued", "sent", "paid", "ignored", "funded", "repaying", "closed"]),
 });
 export type PayInfo = z.infer<typeof PayInfoSchema>;
 

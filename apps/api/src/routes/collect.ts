@@ -11,6 +11,7 @@ import { promises, reminders } from "../db/schema.js";
 import { AppError, parseBody } from "../lib/errors.js";
 import type { AuthGuards } from "../plugins/auth.js";
 import type { AiServices } from "../services/types.js";
+import { confirmUdhaarRepayment, getUdhaarPayInfo } from "../udhaar/service.js";
 
 const CustomerIdBody = z.strictObject({ customerId: z.string().uuid() });
 const notFound = () => new AppError(404, "NOT_FOUND", "Nahi mila (Not found)");
@@ -82,14 +83,17 @@ export function collectRoutes(
 
   // ---- Mock Paytm UPI page (public: the customer has no login) ----
   app.get<{ Params: { token: string } }>("/pay/:token", async (req) => {
-    const info = await getPayInfo(db, req.params.token);
+    // A reminder link, or a Paytm Udhaar repayment link (F4): same public page.
+    const info = (await getPayInfo(db, req.params.token)) ?? (await getUdhaarPayInfo(db, req.params.token));
     if (!info) throw notFound();
     return info;
   });
 
   app.post<{ Params: { token: string } }>("/pay/:token/confirm", async (req) => {
     const body = parseBody(PayConfirmBodySchema, req.body);
-    const result = await confirmPayment(db, req.params.token, body.amountRupees);
+    const result =
+      (await confirmPayment(db, req.params.token, body.amountRupees)) ??
+      (await confirmUdhaarRepayment(db, req.params.token));
     if (!result) throw notFound();
     return result;
   });

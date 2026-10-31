@@ -1,0 +1,2 @@
+ALTER TABLE "udhaar_service_txns" ADD COLUMN "repay_token" text;--> statement-breakpoint
+ALTER TABLE "udhaar_service_txns" ADD CONSTRAINT "udhaar_service_txns_repay_token_unique" UNIQUE("repay_token");

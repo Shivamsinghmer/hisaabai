@@ -3,7 +3,7 @@
 > Living status of the build. Update this file at the end of every work session.
 > Spec: [`CLAUDE.md`](CLAUDE.md) · Plan: [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md)
 
-**Current phase:** Hackathon sprint — S3 Credit done → next S4 khata photo (stretch) / S5 demo hardening (sprint plan at the top of `docs/BUILD_PLAN.md`)
+**Current phase:** Hackathon sprint — S1–S3 + demo prep + Paytm Udhaar (F4) + design pass done. Next: rehearse; khata photo (S4) only if time remains
 **Last updated:** 2026-10-31 (S3)
 
 ---
@@ -42,12 +42,16 @@
 | 2026-10-31 | **Phase 1: web** | Server-side `lib/api.ts` (mints a JWT per call), `lib/strings.ts` (Hinglish + English), `AppShell` (bottom nav, centre mic slot), Home (redirects to onboarding without a shop), onboarding: language → shop → consent → Home (4 screens incl. sign-in). Signed-out `/`, `/me`, `/onboarding` → sign-in |
 | 2026-10-31 | **S3: Credit** | §14 scorecard as a pure function (`services/scorecard.ts`: 7 weighted factors, neutral 0.5 for thin data, empty shop ≈ 570, FIFO credit↔payment pairing for recovery rate and avg days, weekly-sale CV for consistency, top-3 debtor concentration) + `services/emi.ts` (reducing balance, ₹50k/21%/6m ≈ ₹8,851). Offer rules: score ≥ 600 + live lending consent; amount = min(₹2L, avg monthly sales × 0.5/0.8/1.0) stepped to ₹5k (small offers to ₹100); rate 24/21/18 by band. Routes: `GET /credit/score` (compute + store + change vs previous), `GET/POST /consents`, `DELETE /consents/:id` (latest decision wins), `POST /credit/offers` (403 CONSENT_REQUIRED / 409 SCORE_TOO_LOW), `POST /credit/offers/:id/teach-back` (Groq `teach_back_judge.md` extracts; **code** judges ±10% EMI + exact tenure, 2 attempts then Paytm-agent reply), `POST /credit/offers/:id/accept` (mock disbursed + notification; no ledger entry — schema has no loan type yet). Voice: credit intent (owner only) now answers "Mujhe loan mil sakta hai?" with the real score via `score_explainer.md`, deterministic fallback template when Groq fails. Web: `/credit` (gauge with colour + words, change, top/weak factors, tips, loan link, helper sees a friendly owner-only note), `/credit/offer` (consent → offer card → teach-back text/mic → accept), Home link "Credit score dekhein" |
 | 2026-10-31 | S3 tests | 12 new: scorecard/EMI/lender rules/teach-back judge (pure) + credit integration (mock AI, Neon test): healthy shop → score > 600 with digital_share up, helper → 403 on score **and** voice, consent-first 403, revoke closes the offer path, offer EMI matches the formula, wrong teach-back → attempt 1 + real numbers in reply, correct → passed → accept → disbursed + notification, give-up after 2 attempts, cross-shop offer → 404. **93 offline tests pass**; web build + lint + typecheck green |
+| 2026-10-31 | S2 + S3 committed by another AI session | `e567601` (Collect + Credit), pushed to GitHub `Shivamsinghmer/hisaabai`. Taken as the baseline; formatting fixed in `2c39b8d` |
+| 2026-10-31 | **Demo prep** | Your login linked to Sharma General Store on `dev` (`DEMO_OWNER_EMAIL`; the empty test shop was deleted). `pnpm demo:smoke` resets the demo shop, runs all three §22 moments with real Sarvam + Groq, asserts the numbers, warms caches, resets again: all pass (₹450 reply, promise Fri 6 Nov, score **728**, ₹50,000 @ 21%, EMI ₹8,851, teach-back). `cloudflared` installed (winget) for the phone tunnel |
+| 2026-10-31 | **Design system + landing page** | design.md tokens (Ledger Navy, Registry Blue, Network Teal, Mint/Sky Paper, 1px rules, no shadows, square cards, 4px controls) with Tailwind remaps. Fonts: DM Sans for the whole app (legible, lining numerals), Instrument Serif for landing display only (Cormorant drew old-style digits; rejected), IBM Plex Mono for landing notation, Noto Sans Devanagari fallback. Public landing at `/` (signed out). App: Home with navy “Baaki udhaar” hero, bottom nav with icons + active state (Ghar · Khata · mic · Wasooli · Credit), square status tags |
+| 2026-10-31 | **Paytm Udhaar (F4, mock)** | Eligibility per §14 (≥3 months, ≥80% on time via FIFO, no open dispute; limit min(₹5,000, 1.5 × avg ticket) minus outstanding; funded entries excluded). Funding writes the sale + Paytm's instant payment (both `paytm_udhaar`), merchant pays a 1.5% fee (display only), customer repays Paytm on the same public `/pay/:token` page (shop ledger untouched). `/udhaar` screen (owner only) + Home link. Migration `0003` (repay_token). 14 tests |
+| 2026-10-31 | **Sign-in fix** | A wrong password crashed the page (the auth client throws instead of returning `{error}`): all auth calls now wrapped, with clear Hinglish messages. Added **Password bhool gaye?** (emailed code → new password → signed in) |
+| 2026-10-31 | Dev-only design preview | `PREVIEW_MODE=1 node scripts/next.mjs dev --port 3100` (in `apps/web`) renders signed-in pages with fixtures (`lib/preview.ts`); never active in production builds |
 
 ## In progress
 
-- S4: Khata photo (stretch) — decide the vision provider first: **Groq has no vision model today** (see gotchas), so Sarvam Vision only, or another provider.
-- Live check of the S3 demo moments on `dev` (`pnpm seed:demo`, then mic → "Mujhe loan mil sakta hai?" → consent → teach-back).
-- Manual check: hold the mic on Home in a real browser and speak.
+- Nothing running. Servers: API :4000 and web :3000 from production builds.
 
 ## Next up
 

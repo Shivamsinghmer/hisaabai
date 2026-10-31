@@ -6,4 +6,5 @@ export * from "./schemas/collect.js";
 export * from "./schemas/credit.js";
 export * from "./schemas/ledger.js";
 export * from "./schemas/merchant.js";
+export * from "./schemas/udhaar.js";
 export * from "./schemas/voice.js";

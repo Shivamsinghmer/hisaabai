@@ -4,6 +4,7 @@
 import { ApiErrorSchema, MeResponseSchema, type MeResponse } from "@hisaab/shared";
 import { redirect } from "next/navigation";
 import { getApiToken } from "@/lib/auth/server";
+import { PREVIEW, previewFixture } from "@/lib/preview";
 
 const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -18,6 +19,7 @@ export class ApiFailure extends Error {
 }
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  if (PREVIEW) return previewFixture(path) as T;
   const { data } = await getApiToken();
   if (!data?.token) redirect("/auth/sign-in");
 

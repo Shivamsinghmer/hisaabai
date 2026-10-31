@@ -32,7 +32,7 @@ function Hero() {
         <p className={`${eyebrow} text-sky-paper`}>
           Voice-first udhaar ledger · Paytm Build for India · Track 1
         </p>
-        <h1 className="font-display font-display-light mx-auto mt-6 max-w-4xl text-[40px] leading-[1.04] tracking-[-0.36px] md:text-[72px] md:leading-[1.02]">
+        <h1 className="font-display font-display-light mx-auto mt-6 max-w-4xl text-[40px] leading-[1.04] md:text-[72px] md:leading-[1.02]">
           The shopkeeper never types.
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-[18px] leading-[1.4] text-paper-white/85 md:text-[20px]">
@@ -138,7 +138,7 @@ function Statement() {
   return (
     <section id="product" className="border-b border-rule-gray pt-32 pb-20 text-center md:pt-48">
       <div className={wrap}>
-        <h2 className="font-display font-display-light mx-auto max-w-4xl text-[36px] leading-[1.1] tracking-[-0.24px] md:text-[48px] md:leading-[1.1]">
+        <h2 className="font-display font-display-light mx-auto max-w-4xl text-[36px] leading-[1.1] md:text-[48px] md:leading-[1.1]">
           India&rsquo;s udhaar lives in notebooks. Banks can&rsquo;t lend against a notebook.
         </h2>
         <p className="mx-auto mt-6 max-w-2xl text-[18px] leading-[1.4] text-quiet-gray md:text-[20px]">
@@ -253,7 +253,7 @@ function ScoreTrio() {
       <div className={wrap}>
         <div className="mx-auto max-w-3xl text-center">
           <p className={`${eyebrow} text-registry-blue`}>Explainable credit</p>
-          <h2 className="font-display font-display-light mt-4 text-[36px] leading-[1.1] tracking-[-0.24px] md:text-[48px]">
+          <h2 className="font-display font-display-light mt-4 text-[36px] leading-[1.1] md:text-[48px]">
             Every point has a reason.
           </h2>
           <p className="mt-4 text-[18px] text-quiet-gray md:text-[20px]">
@@ -325,9 +325,7 @@ function Principles() {
             className={`border-rule-gray py-10 md:px-8 ${i > 0 ? "border-t md:border-t-0 md:border-l" : "md:pl-0"}`}
           >
             <p className={`${eyebrow} text-quiet-gray`}>0{i + 1}</p>
-            <h3 className="mt-3 text-[24px] font-medium leading-[1.35] tracking-[-0.24px] font-sans">
-              {title}
-            </h3>
+            <h3 className="mt-3 text-[24px] font-medium leading-[1.35] font-sans">{title}</h3>
             <p className="mt-3 text-[16px] leading-[1.5] text-quiet-gray">{body}</p>
           </div>
         ))}

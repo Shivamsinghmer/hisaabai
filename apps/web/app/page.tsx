@@ -5,84 +5,89 @@ import { Label } from "@/components/Label";
 import { Landing } from "@/components/landing/Landing";
 import { apiFetch, requireShop } from "@/lib/api";
 import { auth } from "@/lib/auth/server";
+import { PREVIEW } from "@/lib/preview";
 import { t } from "@/lib/strings";
 
 export const dynamic = "force-dynamic";
 
 // Signed out → public landing page. Signed in → the shop's Home (onboarding if no shop yet).
 export default async function Page() {
-  const { data: session } = await auth.getSession();
+  const { data: session } = PREVIEW ? { data: { user: {} } } : await auth.getSession();
   if (!session?.user) return <Landing />;
   return <Home />;
+}
+
+function Row({ href, label }: { href: string; label: readonly [string, string] }) {
+  return (
+    <Link
+      href={href}
+      className="flex min-h-16 items-center justify-between gap-3 border border-steel-rule bg-paper-white px-4 py-2 text-[17px] font-semibold"
+    >
+      <Label text={label} />
+      <span aria-hidden className="text-xl leading-none">
+        →
+      </span>
+    </Link>
+  );
 }
 
 async function Home() {
   const { merchant } = await requireShop();
   const summary = TodaySummarySchema.parse(await apiFetch("/summary/today"));
 
-  const cards = [
-    { label: t.home.todaySales, value: summary.salesPaise },
-    { label: t.home.udhaarDue, value: summary.udhaarDuePaise },
-    { label: t.home.collected, value: summary.collectedPaise },
-  ];
-
   return (
     <AppShell>
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="mono text-[12px] text-quiet-gray">{t.home.greeting(merchant.ownerName)}</p>
-          <h1 className="mt-1 text-[32px] leading-[1.05]">{merchant.shopName}</h1>
-        </div>
-        <Link href="/me" className="mono min-h-12 px-2 py-3 text-[12px] underline underline-offset-4">
-          Account
-        </Link>
-      </div>
+      <p className="text-[15px] text-quiet-gray">{t.home.greeting(merchant.ownerName)}</p>
+      <h1 className="text-[28px] leading-tight">{merchant.shopName}</h1>
 
-      <section aria-label="Today" className="mt-6 grid grid-cols-3 border border-rule-gray">
-        {cards.map((card, i) => (
-          <div
-            key={card.label[1]}
-            className={`bg-mint-paper p-3 ${i > 0 ? "border-l border-rule-gray" : ""}`}
-          >
-            <p className="font-display text-[26px] leading-none tabular-nums">{formatPaise(card.value)}</p>
-            <Label text={card.label} className="mt-2 block text-[13px] font-medium leading-tight" />
-          </div>
-        ))}
+      {/* The one number a shopkeeper opens the app for: how much is still owed. */}
+      <section aria-label="Udhaar due" className="grid-field mt-5 p-5 text-paper-white">
+        <p className="text-[15px] font-medium text-paper-white/85">
+          {t.home.udhaarDue[0]} <span className="font-normal opacity-70">· {t.home.udhaarDue[1]}</span>
+        </p>
+        <p className="num mt-1 text-[44px] leading-none font-bold">{formatPaise(summary.udhaarDuePaise)}</p>
+        {summary.overdueCustomers > 0 && (
+          <p className="mt-3 inline-block bg-red-100 px-2 py-1 text-[13px] font-semibold text-red-800">
+            {summary.overdueCustomers} customer der se · overdue
+          </p>
+        )}
+        <Link
+          href="/collect"
+          className="mt-4 flex min-h-12 items-center justify-between border border-paper-white/50 px-4 text-[16px] font-semibold"
+        >
+          Wasooli shuru karein <span aria-hidden>→</span>
+        </Link>
       </section>
 
-      <Link
-        href="/customers"
-        className="mt-4 flex min-h-16 items-center justify-between border border-steel-rule px-4 text-[18px] font-medium"
-      >
-        <Label text={["Khata dekhein", "Customers & dues"]} />
-        {summary.overdueCustomers > 0 && (
-          <span className="mono bg-red-100 px-2 py-1 text-[12px] text-red-800">
-            {summary.overdueCustomers} der se · overdue
-          </span>
-        )}
-      </Link>
+      <section aria-label="Today" className="mt-3 grid grid-cols-2 border border-rule-gray">
+        <div className="bg-mint-paper p-4">
+          <p className="num text-[24px] leading-none font-bold">{formatPaise(summary.salesPaise)}</p>
+          <Label text={t.home.todaySales} className="mt-2 block text-[14px] font-medium" />
+        </div>
+        <div className="border-l border-rule-gray bg-mint-paper p-4">
+          <p className="num text-[24px] leading-none font-bold">{formatPaise(summary.collectedPaise)}</p>
+          <Label text={t.home.collected} className="mt-2 block text-[14px] font-medium" />
+        </div>
+      </section>
 
-      <Link
-        href="/credit"
-        className="mt-3 flex min-h-16 items-center justify-between border border-ledger-navy bg-ledger-navy px-4 text-[18px] font-medium text-paper-white"
-      >
-        <Label text={["Credit score dekhein", "Score & loan"]} />
-        <span aria-hidden className="mono">
-          →
+      <div className="mt-5 flex flex-col gap-2">
+        <Row href="/customers" label={["Khata dekhein", "Customers & dues"]} />
+        <Row href="/credit" label={["Credit score dekhein", "Score & loan"]} />
+        <Row href="/udhaar" label={["Paytm Udhaar", "Give credit, Paytm pays you"]} />
+        <div
+          aria-disabled
+          className="flex min-h-16 items-center justify-between border border-dashed border-steel-rule px-4 py-2 text-[17px] font-semibold text-quiet-gray"
+        >
+          <Label text={t.home.scanKhata} />
+          <span className="text-[13px] font-normal">{t.home.comingSoon[0]}</span>
+        </div>
+      </div>
+
+      <p className="mt-8 text-center text-[15px] text-quiet-gray">
+        Mic daba kar boliye
+        <span className="mt-1 block text-[16px] text-ink-black">
+          &ldquo;Gupta ji, do kilo chawal, 120 udhaar&rdquo;
         </span>
-      </Link>
-
-      <button
-        type="button"
-        disabled
-        className="mt-3 flex min-h-16 w-full items-center justify-center border border-dashed border-steel-rule px-4 text-[18px] font-medium disabled:opacity-60"
-      >
-        <Label text={t.home.scanKhata} />
-      </button>
-
-      <p className="mt-8 text-center text-quiet-gray">
-        <span className="mono block text-[12px]">Mic daba kar boliye</span>
-        <em className="mt-1 block not-italic">&ldquo;Gupta ji, do kilo chawal, 120 udhaar&rdquo;</em>
       </p>
     </AppShell>
   );

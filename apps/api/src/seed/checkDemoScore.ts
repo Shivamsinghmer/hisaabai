@@ -3,12 +3,7 @@
 // before a rehearsal. `pnpm --filter @hisaab/api seed:check`
 import { formatPaise } from "@hisaab/shared";
 import { createDb } from "../db/client.js";
-import {
-  computeScore,
-  offerAmountPaise,
-  rateFor,
-  scorecardStats,
-} from "../services/scorecard.js";
+import { computeScore, offerAmountPaise, rateFor, scorecardStats } from "../services/scorecard.js";
 import { emiPaise } from "../services/emi.js";
 import { DEMO_MERCHANT_ID } from "./demo.js";
 

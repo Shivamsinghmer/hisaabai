@@ -30,6 +30,11 @@ export function PayForm({ token, info }: { token: string; info: PayInfo }) {
         <p className="text-sm font-semibold tracking-wide text-sky-800">Paytm UPI</p>
         <h1 className="text-2xl font-bold">{info.shopName}</h1>
         <p className="text-neutral-700">Customer: {info.customerName}</p>
+        {info.kind === "paytm_udhaar" && (
+          <p className="mt-2 border border-sky-700 bg-sky-100 p-2 text-[14px] font-medium text-ledger-navy">
+            Paytm Udhaar: yeh payment dukaan ko nahi, Paytm ko jaa raha hai.
+          </p>
+        )}
       </header>
 
       {paid ? (
@@ -45,7 +50,7 @@ export function PayForm({ token, info }: { token: string; info: PayInfo }) {
         </section>
       ) : (
         <section className="flex flex-col gap-3 rounded-2xl bg-white p-5 shadow">
-          <p className="text-neutral-600">Amount due</p>
+          <p className="text-neutral-600">{info.kind === "paytm_udhaar" ? "Repay to Paytm" : "Amount due"}</p>
           <p className="text-4xl font-bold tabular-nums">{formatPaise(info.amountPaise)}</p>
           <button
             type="button"

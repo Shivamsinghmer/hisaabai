@@ -55,7 +55,7 @@
 /* Font families come from next/font (layout.tsx). */
 @theme inline {
   --font-sans: var(--font-dm-sans), "Uncut Sans", var(--font-deva), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-cormorant), "Season VF", Georgia, "Times New Roman", serif;
+  --font-serif: var(--font-serif-display), "Season VF", Georgia, "Times New Roman", serif;
   --font-mono: var(--font-plex-mono), "Modern Era Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
@@ -76,15 +76,26 @@
 /*
  * Unlayered rules win over Tailwind's utility layer, so these hold everywhere.
  */
+/* App headings: clean sans. The serif is a display face for the landing page only. */
 h1,
 h2,
+h3 {
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
 .font-display {
   font-family: var(--font-serif);
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.01em;
+  font-variant-numeric: lining-nums;
 }
 .font-display-light {
-  font-weight: 500;
+  font-weight: 400;
+}
+/* Money and counts: even-width lining digits. */
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.01em;
 }
 /* Controls: 4px, never pills. Content cards stay square via the radius tokens. */
 button,

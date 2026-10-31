@@ -239,7 +239,7 @@ export function MicButton() {
           if (e.key === " " || e.key === "Enter") stop();
         }}
         onContextMenu={(e) => e.preventDefault()}
-        className={`-mt-8 flex h-20 w-20 touch-none select-none items-center justify-center rounded-full text-white shadow-lg transition-transform disabled:opacity-60 ${
+        className={`-mt-7 flex h-[68px] w-[68px] touch-none select-none items-center justify-center rounded-full text-white shadow-lg transition-transform disabled:opacity-60 ${
           recording ? (phase.cancelling ? "scale-110 bg-red-700" : "scale-110 bg-red-600") : "bg-neutral-900"
         }`}
       >

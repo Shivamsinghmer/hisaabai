@@ -6,6 +6,7 @@ export const t = {
     home: ["Ghar", "Home"],
     khata: ["Khata", "Customers"],
     collect: ["Wasooli", "Collect"],
+    credit: ["Credit", "Score & loan"],
   },
   home: {
     greeting: (name: string) => `Namaste, ${name.split(" ")[0]} ji`,

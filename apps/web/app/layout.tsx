@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, DM_Sans, IBM_Plex_Mono, Noto_Sans_Devanagari } from "next/font/google";
+import { DM_Sans, IBM_Plex_Mono, Instrument_Serif, Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 
-// Substitutes named in design.md for the licensed Season VF / Uncut Sans / Modern Era Mono.
-const cormorant = Cormorant_Garamond({
+// Display serif for the landing page only: Instrument Serif has proper lining numerals
+// (Cormorant, the design.md substitute, drew old-style digits that made rupee amounts hard to read).
+const serif = Instrument_Serif({
   subsets: ["latin"],
-  weight: ["500", "600"],
-  variable: "--font-cormorant",
+  weight: "400",
+  variable: "--font-serif-display",
   display: "swap",
 });
 const dmSans = DM_Sans({
@@ -45,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="hi"
-      className={`${cormorant.variable} ${dmSans.variable} ${plexMono.variable} ${devanagari.variable}`}
+      className={`${serif.variable} ${dmSans.variable} ${plexMono.variable} ${devanagari.variable}`}
     >
       <body className="min-h-screen bg-paper-white text-ink-black antialiased">{children}</body>
     </html>
