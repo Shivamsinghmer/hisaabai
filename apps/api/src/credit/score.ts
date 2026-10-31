@@ -45,15 +45,22 @@ export function tipsFor(factors: ScoreFactor[]): string[] {
 }
 
 /** §22 fallback: "Aapka score 712 hai. Pichhle mahine se 18 badha…" */
-export function basicScoreReply(score: number, change: number | null, factors: ScoreFactor[], tips: string[]): string {
+export function basicScoreReply(
+  score: number,
+  change: number | null,
+  factors: ScoreFactor[],
+  tips: string[],
+): string {
   const worst = [...factors].sort((a, b) => a.points - b.points)[0];
   const best = [...factors].sort((a, b) => b.points - a.points)[0];
   const lines = [`Aapka score ${score} hai.`];
   if (change !== null && change !== 0) {
     lines.push(`Pichhli baar se ${Math.abs(change)} point ${change > 0 ? "badha" : "kam hua"}.`);
   }
-  if (best && best.direction === "up") lines.push(`${FACTOR_LABEL[best.key] ?? "Wapasi"} achhi chal rahi hai.`);
-  if (worst && worst.direction === "down") lines.push(`${FACTOR_LABEL[worst.key] ?? "Kamzor hissa"} par dhyaan dijiye.`);
+  if (best && best.direction === "up")
+    lines.push(`${FACTOR_LABEL[best.key] ?? "Wapasi"} achhi chal rahi hai.`);
+  if (worst && worst.direction === "down")
+    lines.push(`${FACTOR_LABEL[worst.key] ?? "Kamzor hissa"} par dhyaan dijiye.`);
   if (tips[0]) lines.push(tips[0]);
   return lines.join(" ");
 }
@@ -97,7 +104,12 @@ export async function creditVoiceReply(
     const reply = await ai.llm.chatJson({
       op: "score_explainer",
       system: prompt.text,
-      user: JSON.stringify({ score: data.score, change: data.change, factors: data.factors, tips: data.tips }),
+      user: JSON.stringify({
+        score: data.score,
+        change: data.change,
+        factors: data.factors,
+        tips: data.tips,
+      }),
       schema: ExplainerReplySchema,
     });
     return reply.replyText;

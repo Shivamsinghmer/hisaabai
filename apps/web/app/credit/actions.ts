@@ -33,7 +33,18 @@ export async function grantLendingConsent(): Promise<Result<{ granted: boolean }
 
 /** POST /credit/offers — may fail with CONSENT_REQUIRED; the UI offers the consent step. */
 export async function createOffer(): Promise<
-  Result<{ offer: { id: string; amountPaise: number; tenureMonths: number; annualRatePct: number; emiPaise: number } } | { needsConsent: true }>
+  Result<
+    | {
+        offer: {
+          id: string;
+          amountPaise: number;
+          tenureMonths: number;
+          annualRatePct: number;
+          emiPaise: number;
+        };
+      }
+    | { needsConsent: true }
+  >
 > {
   return attempt(async () => {
     const res = await apiFetch<{ offer: unknown }>("/credit/offers", { method: "POST" });

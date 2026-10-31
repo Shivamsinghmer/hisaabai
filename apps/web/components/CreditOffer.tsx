@@ -42,8 +42,7 @@ export function CreditOffer({ initialScore }: { initialScore: number | null }) {
     setStep("offer");
   }
 
-  const btn =
-    "min-h-14 w-full rounded-lg font-semibold disabled:opacity-50";
+  const btn = "min-h-14 w-full rounded-lg font-semibold disabled:opacity-50";
 
   return (
     <div className="flex flex-col gap-4">
@@ -52,7 +51,12 @@ export function CreditOffer({ initialScore }: { initialScore: number | null }) {
           <p className="text-neutral-700">
             Score {score ?? "—"} ke hisaab se dikhate hain ki aapko kitne ka loan ban sakta hai.
           </p>
-          <button type="button" disabled={pending} className={`${btn} bg-neutral-900 text-white`} onClick={() => start(() => requestOffer(false))}>
+          <button
+            type="button"
+            disabled={pending}
+            className={`${btn} bg-neutral-900 text-white`}
+            onClick={() => start(() => requestOffer(false))}
+          >
             Score dekhein aur loan check karein <span className="block text-sm font-normal">Check loan</span>
           </button>
         </>
@@ -62,10 +66,18 @@ export function CreditOffer({ initialScore }: { initialScore: number | null }) {
         <>
           <p className="font-medium">Kya aap Paytm ko apna hisaab dikhane ki anumati dete hain?</p>
           <p className="text-sm text-neutral-600">
-            Aapka score aur ledger data loan ke hisaab ke liye jaata hai. Anumati kabhi bhi wapas li ja sakti hai.
-            <span className="block">(Allow Paytm to view your ledger for lending. You can revoke consent any time.)</span>
+            Aapka score aur ledger data loan ke hisaab ke liye jaata hai. Anumati kabhi bhi wapas li ja sakti
+            hai.
+            <span className="block">
+              (Allow Paytm to view your ledger for lending. You can revoke consent any time.)
+            </span>
           </p>
-          <button type="button" disabled={pending} className={`${btn} bg-neutral-900 text-white`} onClick={() => start(() => requestOffer(true))}>
+          <button
+            type="button"
+            disabled={pending}
+            className={`${btn} bg-neutral-900 text-white`}
+            onClick={() => start(() => requestOffer(true))}
+          >
             Anumati dein <span className="block text-sm font-normal">Grant consent</span>
           </button>
         </>
@@ -144,7 +156,8 @@ export function CreditOffer({ initialScore }: { initialScore: number | null }) {
         <div className="rounded-xl border-2 border-green-600 p-4 text-center">
           <p className="text-xl font-bold text-green-800">Loan approve ✓</p>
           <p className="mt-1 text-sm text-neutral-600">
-            Paise (demo) aapke khaate mein. EMI yaad rahegi: har mahine {offer ? formatPaise(offer.emiPaise) : ""}.
+            Paise (demo) aapke khaate mein. EMI yaad rahegi: har mahine{" "}
+            {offer ? formatPaise(offer.emiPaise) : ""}.
           </p>
         </div>
       )}

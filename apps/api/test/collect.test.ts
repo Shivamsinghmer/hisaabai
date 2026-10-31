@@ -71,15 +71,13 @@ beforeAll(async () => {
   await addCustomer("Verma ji", 60000, "2099-01-01");
   await addCustomer("Ansari ji", 30000, "2026-10-20");
   await addCustomer("Joshi ji", 20000, "2026-10-20");
-  await t.db
-    .insert(promises)
-    .values({
-      merchantId,
-      customerId: ids["Khan sahab"]!,
-      promisedDate: "2026-10-24",
-      status: "broken",
-      amountPaise: 120000,
-    });
+  await t.db.insert(promises).values({
+    merchantId,
+    customerId: ids["Khan sahab"]!,
+    promisedDate: "2026-10-24",
+    status: "broken",
+    amountPaise: 120000,
+  });
 });
 afterAll(async () => {
   await t.close();

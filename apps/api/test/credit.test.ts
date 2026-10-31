@@ -40,8 +40,22 @@ async function seedHealthyShop() {
     const day = (n: number) => new Date(weekStart + n * 86_400_000).toISOString().slice(0, 10);
     await t.db.insert(ledgerEntries).values([
       { merchantId, customerId: null, type: "sale", amountPaise: 60_000, source: "upi", entryDate: day(0) },
-      { merchantId, customerId: gupta!.id, type: "credit", amountPaise: 50_000, source: "voice", entryDate: day(1) },
-      { merchantId, customerId: gupta!.id, type: "payment", amountPaise: 50_000, source: "upi", entryDate: day(2) },
+      {
+        merchantId,
+        customerId: gupta!.id,
+        type: "credit",
+        amountPaise: 50_000,
+        source: "voice",
+        entryDate: day(1),
+      },
+      {
+        merchantId,
+        customerId: gupta!.id,
+        type: "payment",
+        amountPaise: 50_000,
+        source: "upi",
+        entryDate: day(2),
+      },
     ]);
   }
   await t.db.insert(promises).values([
@@ -135,18 +149,22 @@ describe("offer + teach-back + accept (F3.2/F3.3)", () => {
     expect(early.statusCode).toBe(409);
 
     // Wrong answer → attempt 1 fails with the real numbers in the reply.
-    const wrong = (await post(`/credit/offers/${offer.id}/teach-back`, {
-      text: "har mahine 20 hazaar, nau mahine",
-    })).json<TeachBackResult>();
+    const wrong = (
+      await post(`/credit/offers/${offer.id}/teach-back`, {
+        text: "har mahine 20 hazaar, nau mahine",
+      })
+    ).json<TeachBackResult>();
     expect(wrong.passed).toBe(false);
     expect(wrong.attempts).toBe(1);
     expect(wrong.replyText).toContain("har mahine");
     expect(wrong.replyText).toContain("6 mahine");
 
     // Correct answer (within ±10%) → passed → accept (mock disburse).
-    const right = (await post(`/credit/offers/${offer.id}/teach-back`, {
-      text: `har mahine ${Math.round(offer.emiPaise / 100)}, 6 mahine`,
-    })).json<TeachBackResult>();
+    const right = (
+      await post(`/credit/offers/${offer.id}/teach-back`, {
+        text: `har mahine ${Math.round(offer.emiPaise / 100)}, 6 mahine`,
+      })
+    ).json<TeachBackResult>();
     expect(right.passed).toBe(true);
 
     const offerAfter = (await post(`/credit/offers/${offer.id}/accept`)).json();

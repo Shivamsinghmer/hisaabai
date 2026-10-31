@@ -88,7 +88,9 @@ describe("§14 scorecard", () => {
       creditGivenPaise: 100_000,
       repaidPaise: 30_000,
       avgDaysToRecover: 58,
-      weeklySales: [50_000, 5_000, 40_000, 2_000, 30_000, 8_000, 60_000, 1_000, 45_000, 3_000, 55_000, 2_000, 35_000],
+      weeklySales: [
+        50_000, 5_000, 40_000, 2_000, 30_000, 8_000, 60_000, 1_000, 45_000, 3_000, 55_000, 2_000, 35_000,
+      ],
       salesPaise: 0,
       upiSalesPaise: 0,
       debtorConcentration: 0.8,

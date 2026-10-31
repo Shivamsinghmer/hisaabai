@@ -81,14 +81,28 @@ function normalizeAll(s: ScorecardStats): ScoreFactor[] {
   const days = s.avgDaysToRecover === null ? NEUTRAL : norm(1 - s.avgDaysToRecover / 60);
   const tenure = norm(Math.min(s.monthsOfHistory, 12) / 12);
   // concentration: 0 → 1, ≥ 0.6 → 0
-  const concentration =
-    s.debtorConcentration === null ? NEUTRAL : norm(1 - s.debtorConcentration / 0.6);
+  const concentration = s.debtorConcentration === null ? NEUTRAL : norm(1 - s.debtorConcentration / 0.6);
 
   const raw: [string, number, number, number][] = [
-    ["recovery_rate", s.creditGivenPaise > 0 ? s.repaidPaise / s.creditGivenPaise : 0, recovery, FACTOR_WEIGHTS.recovery_rate],
+    [
+      "recovery_rate",
+      s.creditGivenPaise > 0 ? s.repaidPaise / s.creditGivenPaise : 0,
+      recovery,
+      FACTOR_WEIGHTS.recovery_rate,
+    ],
     ["sales_consistency", 0, consistencyScore, FACTOR_WEIGHTS.sales_consistency],
-    ["promise_reliability", s.promisesMade > 0 ? s.promisesKept / s.promisesMade : 0, promiseReliability, FACTOR_WEIGHTS.promise_reliability],
-    ["digital_share", s.salesPaise > 0 ? s.upiSalesPaise / s.salesPaise : 0, digital, FACTOR_WEIGHTS.digital_share],
+    [
+      "promise_reliability",
+      s.promisesMade > 0 ? s.promisesKept / s.promisesMade : 0,
+      promiseReliability,
+      FACTOR_WEIGHTS.promise_reliability,
+    ],
+    [
+      "digital_share",
+      s.salesPaise > 0 ? s.upiSalesPaise / s.salesPaise : 0,
+      digital,
+      FACTOR_WEIGHTS.digital_share,
+    ],
     ["avg_days_to_recover", s.avgDaysToRecover ?? 0, days, FACTOR_WEIGHTS.avg_days_to_recover],
     ["tenure_months", Math.min(s.monthsOfHistory, 12), tenure, FACTOR_WEIGHTS.tenure_months],
     ["debtor_concentration", s.debtorConcentration ?? 0, concentration, FACTOR_WEIGHTS.debtor_concentration],
@@ -169,7 +183,11 @@ export async function scorecardStats(db: Db, merchantId: string): Promise<Scorec
   // FIFO: each payment settles the oldest unpaid credits of its customer,
   // weighted by the portion it covers (weight-correct average days).
   const queue = new Map<string, { date: string; paise: number }[]>();
-  for (const c of credits) queue.set(c.customerId!, [...(queue.get(c.customerId!) ?? []), { date: c.entryDate!, paise: c.amountPaise }]);
+  for (const c of credits)
+    queue.set(c.customerId!, [
+      ...(queue.get(c.customerId!) ?? []),
+      { date: c.entryDate!, paise: c.amountPaise },
+    ]);
 
   let repaid = 0;
   let repaidPortions = 0;

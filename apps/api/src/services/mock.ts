@@ -96,7 +96,8 @@ export function mockSpeech(storage: FileStorage): SpeechService {
   };
 }
 
-const HINDI_NUM = /\b(\d{1,2}|gyarah|barah|terah|chaudah|pandrah|das|nau|aath|saat|chhe|che|paanc[hz]h?|cha[a]?r|teen|do|ek)\s*mahine?\b/i;
+const HINDI_NUM =
+  /\b(\d{1,2}|gyarah|barah|terah|chaudah|pandrah|das|nau|aath|saat|chhe|che|paanc[hz]h?|cha[a]?r|teen|do|ek)\s*mahine?\b/i;
 const HINDI_NUM_VALUE: Record<string, number> = {
   gyarah: 11,
   barah: 12,

@@ -31,7 +31,10 @@ export default async function CreditPage() {
           Yeh hisaab sirf dukaan ke maalik dekh sakte hain.
           <span className="block text-sm text-neutral-500">Only the shop owner can view credit.</span>
         </p>
-        <Link href="/" className="mt-6 inline-block min-h-12 rounded-lg border-2 border-neutral-900 px-4 py-3 font-semibold">
+        <Link
+          href="/"
+          className="mt-6 inline-block min-h-12 rounded-lg border-2 border-neutral-900 px-4 py-3 font-semibold"
+        >
           Ghar jayein
         </Link>
       </AppShell>
@@ -65,9 +68,13 @@ export default async function CreditPage() {
         <p className={`text-6xl font-bold tabular-nums ${gauge.text}`}>{score.score}</p>
         <p className={`mt-1 font-semibold ${gauge.text}`}>{gauge.word}</p>
         <div className="mt-3 h-3 overflow-hidden rounded-full bg-neutral-200">
-          <div className={`h-3 rounded-full ${gauge.bar}`} style={{ width: `${((score.score - 300) / 600) * 100}%` }} />
+          <div
+            className={`h-3 rounded-full ${gauge.bar}`}
+            style={{ width: `${((score.score - 300) / 600) * 100}%` }}
+          />
         </div>
-        <p className="mt-2 text-sm text-neutral-600">Scale 300–900 ·{" "}
+        <p className="mt-2 text-sm text-neutral-600">
+          Scale 300–900 ·{" "}
           {score.change !== null && (
             <span className={score.change >= 0 ? "text-green-700" : "text-red-700"}>
               {score.change >= 0 ? "↑" : "↓"} {Math.abs(score.change)} pichhli baar se
@@ -80,7 +87,10 @@ export default async function CreditPage() {
         <h2 className="font-semibold">Majboot hisse (Top factors)</h2>
         <ul className="flex flex-col gap-1">
           {top.map((f) => (
-            <li key={f.key} className="flex min-h-10 items-center justify-between rounded border border-neutral-200 px-3 text-sm">
+            <li
+              key={f.key}
+              className="flex min-h-10 items-center justify-between rounded border border-neutral-200 px-3 text-sm"
+            >
               <span>{FACTOR_LABEL[f.key] ?? f.key}</span>
               <span className="font-semibold text-green-700">
                 {f.direction === "up" ? "↑" : "↓"} {f.points}
@@ -91,7 +101,10 @@ export default async function CreditPage() {
         <h2 className="mt-3 font-semibold">Kamzor hisse</h2>
         <ul className="flex flex-col gap-1">
           {weak.map((f) => (
-            <li key={f.key} className="flex min-h-10 items-center justify-between rounded border border-neutral-200 px-3 text-sm">
+            <li
+              key={f.key}
+              className="flex min-h-10 items-center justify-between rounded border border-neutral-200 px-3 text-sm"
+            >
               <span>{FACTOR_LABEL[f.key] ?? f.key}</span>
               <span className="font-semibold text-red-700">{f.points}</span>
             </li>

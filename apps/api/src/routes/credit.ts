@@ -179,8 +179,7 @@ export function creditRoutes(app: FastifyInstance, deps: { db: Db; ai: AiService
         .set({ teachBackAttempts: attempts, teachBackPassed: passed })
         .where(eq(loanOffers.id, row.id))
         .returning();
-      const replyText =
-        passed ? passReply() : attempts >= 2 ? giveUpReply() : failReply(offer);
+      const replyText = passed ? passReply() : attempts >= 2 ? giveUpReply() : failReply(offer);
       return TeachBackResultSchema.parse({ passed, attempts, replyText, offer: toOffer(updated!) });
     },
   );
