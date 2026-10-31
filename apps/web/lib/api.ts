@@ -44,6 +44,28 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   return body as T;
 }
 
+/** Customer-facing endpoints (pay page, call tab): no login, no token. */
+export async function publicApiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    ...init,
+    cache: "no-store",
+    headers: {
+      ...(typeof init.body === "string" ? { "content-type": "application/json" } : {}),
+      ...init.headers,
+    },
+  });
+  const body: unknown = await res.json().catch(() => null);
+  if (!res.ok) {
+    const parsed = ApiErrorSchema.safeParse(body);
+    throw new ApiFailure(
+      res.status,
+      parsed.success ? parsed.data.error.code : "HTTP_ERROR",
+      parsed.success ? parsed.data.error.message : `API ${res.status}`,
+    );
+  }
+  return body as T;
+}
+
 /** The signed-in user and their shop (null until onboarding). */
 export async function getMe(): Promise<MeResponse> {
   return MeResponseSchema.parse(await apiFetch<unknown>("/me"));

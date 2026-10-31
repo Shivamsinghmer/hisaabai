@@ -15,6 +15,13 @@
       "when": 1793426513526,
       "tag": "0001_futuristic_red_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793429030011,
+      "tag": "0002_green_loners",
+      "breakpoints": true
     }
   ]
 }

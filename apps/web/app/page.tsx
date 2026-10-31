@@ -50,6 +50,14 @@ export default async function Home() {
         )}
       </Link>
 
+      <Link
+        href="/credit"
+        className="mt-3 flex min-h-16 items-center justify-between rounded-lg border-2 border-neutral-900 bg-neutral-50 px-4 text-lg font-semibold"
+      >
+        <Label text={["Credit score dekhein", "Score & loan"]} />
+        <span aria-hidden>→</span>
+      </Link>
+
       <button
         type="button"
         disabled

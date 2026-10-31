@@ -33,7 +33,15 @@ export type ScoreFactor = {
   points: number;
   direction: "up" | "down";
 };
-export type CallTurn = { role: "agent" | "customer"; text: string; at: string };
+export type CallTurn = { role: "agent" | "customer"; text: string; at: string; audioUrl?: string | null };
+export type CallMeta = {
+  amountPaise?: number;
+  promise?: { promisedDate: string; amountPaise: number | null };
+  followUpAt?: string;
+  payUrl?: string;
+  /** Paid now via link during a partial ("abhi 200 deta hoon"). */
+  partialPaise?: number;
+};
 
 export const merchants = pgTable("merchants", {
   id: id(),
@@ -243,6 +251,7 @@ export const calls = pgTable(
     status: text("status").default("ringing").$type<"ringing" | "live" | "ended">(),
     outcome: text("outcome").$type<"paid" | "promise" | "partial" | "dispute" | "no_answer" | "refused">(),
     transcript: jsonb("transcript").$type<CallTurn[]>().default([]),
+    meta: jsonb("meta").$type<CallMeta>().default({}),
     startedAt: timestamp("started_at", { withTimezone: true }).defaultNow(),
     endedAt: timestamp("ended_at", { withTimezone: true }),
   },

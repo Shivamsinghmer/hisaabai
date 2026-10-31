@@ -17,6 +17,7 @@ const app = await buildApp({
   storage,
   verifyToken: neonAuthVerifier(env.NEON_AUTH_JWKS_URL, env.NEON_AUTH_BASE_URL),
   webOrigin: env.WEB_ORIGIN,
+  payLinkBase: env.PAY_LINK_BASE_URL,
   logger: { level: env.NODE_ENV === "production" ? "info" : "debug" },
   ai: (log) =>
     createAi(

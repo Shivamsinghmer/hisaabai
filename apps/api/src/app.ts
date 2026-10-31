@@ -6,6 +6,8 @@ import type { Redis } from "ioredis";
 import type { Db } from "./db/client.js";
 import { registerErrorHandler } from "./lib/errors.js";
 import { createAuthGuards, type TokenVerifier } from "./plugins/auth.js";
+import { creditRoutes } from "./routes/credit.js";
+import { collectRoutes } from "./routes/collect.js";
 import { ledgerRoutes } from "./routes/ledger.js";
 import { merchantRoutes } from "./routes/merchants.js";
 import { voiceLimits, voiceRoutes } from "./routes/voice.js";
@@ -17,6 +19,8 @@ export type AppDeps = {
   redis: Redis | null;
   verifyToken: TokenVerifier;
   webOrigin: string;
+  /** Base for mock UPI links; defaults to <webOrigin>/pay. */
+  payLinkBase?: string;
   storage: FileStorage;
   /** AI providers, or a factory that receives the app's logger. */
   ai: AiServices | ((log: FastifyBaseLogger) => AiServices);
@@ -24,7 +28,16 @@ export type AppDeps = {
 };
 
 /** Builds the API without listening, so tests can inject requests and stub auth/AI. */
-export async function buildApp({ db, redis, verifyToken, webOrigin, storage, ai, logger = false }: AppDeps) {
+export async function buildApp({
+  db,
+  redis,
+  verifyToken,
+  webOrigin,
+  payLinkBase,
+  storage,
+  ai,
+  logger = false,
+}: AppDeps) {
   const app = Fastify({ logger, genReqId: () => crypto.randomUUID() });
   await app.register(cors, { origin: webOrigin, methods: ["GET", "POST", "PATCH", "DELETE"] });
   await app.register(multipart, { limits: voiceLimits });
@@ -63,6 +76,14 @@ export async function buildApp({ db, redis, verifyToken, webOrigin, storage, ai,
 
   merchantRoutes(app, db, guards);
   ledgerRoutes(app, db, guards);
+  creditRoutes(app, { db, ai: aiServices, guards });
   voiceRoutes(app, { db, ai: aiServices, storage, guards });
+  collectRoutes(app, {
+    db,
+    ai: aiServices,
+    guards,
+    payLinkBase: payLinkBase ?? `${webOrigin}/pay`,
+    webOrigin,
+  });
   return app;
 }

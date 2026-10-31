@@ -1,0 +1,1 @@
+ALTER TABLE "calls" ADD COLUMN "meta" jsonb DEFAULT '{}'::jsonb;

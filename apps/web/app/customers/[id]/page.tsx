@@ -2,6 +2,7 @@ import { CustomerDetailSchema, formatPaise } from "@hisaab/shared";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { CollectActions } from "@/components/CollectActions";
 import { PredictionLabel, StatusBadge } from "@/components/StatusBadge";
 import { ApiFailure, apiFetch, requireShop } from "@/lib/api";
 
@@ -47,23 +48,11 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
         )}
       </section>
 
-      {/* Collect actions arrive in S2. */}
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          disabled
-          className="min-h-14 rounded-lg border-2 border-neutral-300 font-semibold opacity-60"
-        >
-          Yaad dilayein <span className="block text-sm font-normal">Remind</span>
-        </button>
-        <button
-          type="button"
-          disabled
-          className="min-h-14 rounded-lg border-2 border-neutral-300 font-semibold opacity-60"
-        >
-          Call (AI)
-        </button>
-      </div>
+      {customer.balancePaise > 0 && (
+        <div className="mt-3">
+          <CollectActions customerId={customer.id} />
+        </div>
+      )}
 
       {promises.length > 0 && (
         <section className="mt-6">

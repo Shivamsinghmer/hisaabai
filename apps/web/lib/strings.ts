@@ -5,6 +5,7 @@ export const t = {
   nav: {
     home: ["Ghar", "Home"],
     khata: ["Khata", "Customers"],
+    collect: ["Wasooli", "Collect"],
   },
   home: {
     greeting: (name: string) => `Namaste, ${name.split(" ")[0]} ji`,

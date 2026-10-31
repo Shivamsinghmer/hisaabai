@@ -15,8 +15,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md items-end justify-around border-t border-neutral-200 bg-white px-4 pt-2 pb-3"
       >
         <NavLink href="/" label={t.nav.home} />
-        <MicButton />
         <NavLink href="/customers" label={t.nav.khata} />
+        <MicButton />
+        <NavLink href="/collect" label={t.nav.collect} />
       </nav>
     </div>
   );

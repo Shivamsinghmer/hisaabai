@@ -1,6 +1,14 @@
 // AI_MOCK=true: deterministic, offline stand-ins for Sarvam and Groq. Used by
 // tests and as the last-resort demo fallback (BUILD_PLAN "AI_MOCK mode").
-import { parseAmountRupees, type ExtractedEntry, type Intent, type IntentResult } from "@hisaab/shared";
+import {
+  parseAmountRupees,
+  type CallIntent,
+  type ExtractedEntry,
+  type Intent,
+  type IntentResult,
+  type ScoreFactor,
+} from "@hisaab/shared";
+import { basicScoreReply } from "../credit/score.js";
 import { cacheKey } from "./cache.js";
 import type { FileStorage } from "./storage.js";
 import type { LlmService, SpeechService } from "./types.js";
@@ -88,12 +96,75 @@ export function mockSpeech(storage: FileStorage): SpeechService {
   };
 }
 
+const HINDI_NUM = /\b(\d{1,2}|gyarah|barah|terah|chaudah|pandrah|das|nau|aath|saat|chhe|che|paanc[hz]h?|cha[a]?r|teen|do|ek)\s*mahine?\b/i;
+const HINDI_NUM_VALUE: Record<string, number> = {
+  gyarah: 11,
+  barah: 12,
+  terah: 13,
+  chaudah: 14,
+  pandrah: 15,
+  das: 10,
+  nau: 9,
+  aath: 8,
+  saat: 7,
+  chhe: 6,
+  che: 6,
+  paanch: 5,
+  paanc: 5,
+  chaar: 4,
+  char: 4,
+  teen: 3,
+  do: 2,
+  ek: 1,
+};
+
+/** Rule-based stand-ins for teach_back_judge.md and score_explainer.md. */
+export function mockTeachBack(user: string): { emi_rupees: number | null; tenure_months: number | null } {
+  const emi = parseAmountRupees(user);
+  const m = user.match(HINDI_NUM)?.[1];
+  return { emi_rupees: emi, tenure_months: m ? (HINDI_NUM_VALUE[m] ?? Number(m)) : null };
+}
+
+export function mockScoreExplainer(user: string): { replyText: string } {
+  const data = JSON.parse(user) as {
+    score: number;
+    change: number | null;
+    factors: ScoreFactor[];
+    tips: string[];
+  };
+  return { replyText: basicScoreReply(data.score, data.change, data.factors, data.tips) };
+}
+
 export function mockLlm(): LlmService {
   return {
     async chatJson({ op, user, schema }) {
       if (op === "intent_router") return schema.parse(mockIntent(user));
       if (op === "extract_entry") return schema.parse(mockExtract(user));
+      if (op === "call_agent") return schema.parse(mockCallIntent(user));
+      if (op === "score_explainer") return schema.parse(mockScoreExplainer(user));
+      if (op === "teach_back") return schema.parse(mockTeachBack(user));
       throw new Error(`mock LLM has no fixture for op "${op}"`);
     },
   };
+}
+
+const DATE_WORDS =
+  /\b(aaj|kal|parso|parson|monday|tuesday|wednesday|thursday|friday|saturday|sunday|somvar|mangalvar|budhvar|guruvar|shukravar|shanivar|ravivar|agle hafte|\d{1,2} tareekh)\b/i;
+
+/** Rule-based stand-in for call_agent.md. */
+export function mockCallIntent(text: string): CallIntent {
+  const lower = text.toLowerCase();
+  const date = lower.match(DATE_WORDS)?.[1] ?? null;
+  const amount = parseAmountRupees(text);
+  const base = { promised_date_phrase: date, amount_rupees: null };
+  if (/(de diya tha|de chuka|pehle hi|galat hai|itna nahi)/.test(lower))
+    return { ...base, intent: "dispute" };
+  if (/(galat number|wrong number|main nahi hoon)/.test(lower)) return { ...base, intent: "wrong_person" };
+  if (/(busy|baad mein (call|baat))/.test(lower)) return { ...base, intent: "busy" };
+  if (/(nahi dunga|nahi doonga|nahi de sakta)/.test(lower)) return { ...base, intent: "refuse" };
+  if (amount !== null && /(abhi|baaki)/.test(lower))
+    return { ...base, intent: "partial", amount_rupees: amount };
+  if (date) return { ...base, intent: "promise" };
+  if (/(abhi|link|bhejo|kar raha)/.test(lower)) return { ...base, intent: "pay_now" };
+  return { ...base, intent: "unclear" };
 }

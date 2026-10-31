@@ -18,6 +18,9 @@ const EnvSchema = z.object({
   UPSTASH_REDIS_REST_URL: optional(z.string().url()),
   UPSTASH_REDIS_REST_TOKEN: optional(z.string().min(1)),
 
+  // Mock UPI links (in-app /pay/:token page); defaults to <WEB_ORIGIN>/pay.
+  PAY_LINK_BASE_URL: optional(z.string().url()),
+
   // Files (TTS audio now, khata photos later). Local disk in dev.
   UPLOAD_DIR: z.string().default("./uploads"),
 

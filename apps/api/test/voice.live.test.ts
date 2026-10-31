@@ -104,4 +104,25 @@ describe.skipIf(!live)("voice, live providers", () => {
     expect(body.entry).toMatchObject({ customerName: "Gupta ji", amountPaise: 12000, balancePaise: 45000 });
     expect(body.replyText).toBe("Gupta ji ke khate mein ₹120 udhaar jod diya. Ab kul ₹450 baaki.");
   });
+
+  it("AI call with real Groq: 'Haan ji, Friday ko de dunga' → promise", async () => {
+    const list = await t.app.inject({ method: "GET", url: "/customers", headers: bearer(owner) });
+    const gupta = list.json().customers.find((c: { name: string }) => c.name === "Gupta ji");
+    const started = await t.app.inject({
+      method: "POST",
+      url: "/calls",
+      headers: bearer(owner),
+      payload: { customerId: gupta.id },
+    });
+    const callId = started.json().call.id;
+    const res = await t.app.inject({
+      method: "POST",
+      url: `/call-sim/${callId}/turn`,
+      payload: { text: "Haan ji, Friday ko de dunga" },
+    });
+    const call = res.json().call;
+    expect(call.outcome).toBe("promise");
+    expect(call.promise.promisedDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(call.transcript.at(-1).audioUrl).toMatch(/\.mp3$/);
+  });
 });

@@ -3,8 +3,8 @@
 > Living status of the build. Update this file at the end of every work session.
 > Spec: [`CLAUDE.md`](CLAUDE.md) · Plan: [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md)
 
-**Current phase:** Hackathon sprint — S1 done → S2 Collect (reminders, pay link, AI call sim). **Jury demo after ~4 more hours of building** (sprint plan at the top of `docs/BUILD_PLAN.md`)
-**Last updated:** 2026-10-31
+**Current phase:** Hackathon sprint — S3 Credit done → next S4 khata photo (stretch) / S5 demo hardening (sprint plan at the top of `docs/BUILD_PLAN.md`)
+**Last updated:** 2026-10-31 (S3)
 
 ---
 
@@ -36,19 +36,24 @@
 | 2026-10-31 | Phase 2 tests | 17 new API tests (mock AI): intents, ₹ read-back, not-understood, audio upload, silence, 415, helper owner-only reply, TTS/media caching, path tricks; aiCall cache/retry/timeout/no-PII logging. **Live test** (`pnpm --filter @hisaab/api test:live`): real Sarvam + Groq, typed loan question → credit + MP3; TTS audio → STT "Gupta ji…" → capture → "₹120" |
 | 2026-10-31 | **S1: voice capture → ledger** | `extract_entry.md` (Groq) + deterministic amount parser wins on amount; fuzzy customer matcher (honorifics, aliases, "Gupta ji" ⊂ "Ramesh Gupta" → ambiguous); follow-ups as tap-to-answer buttons (new customer, which Gupta, duplicate within 2 min, how much, confirm delete); due date from "Friday tak" or default days; spoken reply with new balance. Routes: `GET /customers`, `GET /customers/:id`, `DELETE /ledger/:id` (soft), `GET /summary/today`. Web: entry card with 10 s Undo, follow-up buttons, Khata list (status in words + colour, prediction), customer page (balance, promises, history), Home real numbers |
 | 2026-10-31 | S1 tests | All five F1.2 utterances + follow-ups + reads + cross-shop isolation (mock AI); matcher unit tests. **Live:** spoken "Gupta ji, do kilo chawal, ek sau bees udhaar" → real STT + Groq → "Gupta ji ke khate mein ₹120 udhaar jod diya. Ab kul ₹450 baaki." 59 offline + 2 live API tests pass |
+| 2026-10-31 | **S2: Collect** | Reminders: gentle/firm by broken promises or 15+ days overdue (templates from F2.1, never threatening), one per customer per day, mock pay link. Public mock Paytm UPI page `/pay/:token` (full or partial, idempotent, closes promises, notifies merchant). **Two-tab AI call:** `POST /calls` → agent greeting (TTS) → customer tab `/call-sim/:id` (public, ring → answer → push-to-talk or type) → Groq classifies (`call_agent.md`: pay_now/promise/partial/dispute/busy/wrong_person/refuse) → code acts with fixed polite lines: promise + follow-up (queued reminder, day after 10:00 IST), partial link + promise for the rest, dispute logged, ≤ 3 agent turns. Merchant `/call/:id` polls (1.5 s). `/collect` dashboard (overdue first, open/broken promises, reminded today, recent calls). Web proxies `/media/*` so only the web app needs a tunnel. Migration `0002` (calls.meta) |
+| 2026-10-31 | S2 tests | 11 collect tests (mock AI): reminder tones + daily dedupe, pay page partial → full → idempotent, "Friday ko dunga" → promise + follow-up, partial → promise for the rest, dispute, 3-turn cap, isolation, dashboard. **Live:** real Groq "Haan ji, Friday ko de dunga" → promise 2026-11-06 + MP3. 70 offline + 3 live API tests pass. Public pages smoke-tested signed out |
 | 2026-10-31 | Onboarding verified by hand on `dev` | Real sign-in → language (Hinglish) → shop → consent → Home; DB has the shop, owner membership linked to the Neon Auth user, and the `data_storage` consent |
 | 2026-10-31 | **Phase 1: web** | Server-side `lib/api.ts` (mints a JWT per call), `lib/strings.ts` (Hinglish + English), `AppShell` (bottom nav, centre mic slot), Home (redirects to onboarding without a shop), onboarding: language → shop → consent → Home (4 screens incl. sign-in). Signed-out `/`, `/me`, `/onboarding` → sign-in |
+| 2026-10-31 | **S3: Credit** | §14 scorecard as a pure function (`services/scorecard.ts`: 7 weighted factors, neutral 0.5 for thin data, empty shop ≈ 570, FIFO credit↔payment pairing for recovery rate and avg days, weekly-sale CV for consistency, top-3 debtor concentration) + `services/emi.ts` (reducing balance, ₹50k/21%/6m ≈ ₹8,851). Offer rules: score ≥ 600 + live lending consent; amount = min(₹2L, avg monthly sales × 0.5/0.8/1.0) stepped to ₹5k (small offers to ₹100); rate 24/21/18 by band. Routes: `GET /credit/score` (compute + store + change vs previous), `GET/POST /consents`, `DELETE /consents/:id` (latest decision wins), `POST /credit/offers` (403 CONSENT_REQUIRED / 409 SCORE_TOO_LOW), `POST /credit/offers/:id/teach-back` (Groq `teach_back_judge.md` extracts; **code** judges ±10% EMI + exact tenure, 2 attempts then Paytm-agent reply), `POST /credit/offers/:id/accept` (mock disbursed + notification; no ledger entry — schema has no loan type yet). Voice: credit intent (owner only) now answers "Mujhe loan mil sakta hai?" with the real score via `score_explainer.md`, deterministic fallback template when Groq fails. Web: `/credit` (gauge with colour + words, change, top/weak factors, tips, loan link, helper sees a friendly owner-only note), `/credit/offer` (consent → offer card → teach-back text/mic → accept), Home link "Credit score dekhein" |
+| 2026-10-31 | S3 tests | 12 new: scorecard/EMI/lender rules/teach-back judge (pure) + credit integration (mock AI, Neon test): healthy shop → score > 600 with digital_share up, helper → 403 on score **and** voice, consent-first 403, revoke closes the offer path, offer EMI matches the formula, wrong teach-back → attempt 1 + real numbers in reply, correct → passed → accept → disbursed + notification, give-up after 2 attempts, cross-shop offer → 404. **93 offline tests pass**; web build + lint + typecheck green |
 
 ## In progress
 
-- S2: Collect (see sprint plan).
-- Manual check: hold the mic on Home in a real browser and speak (Phase 2 UI not clicked through yet).
+- S4: Khata photo (stretch) — decide the vision provider first: **Groq has no vision model today** (see gotchas), so Sarvam Vision only, or another provider.
+- Live check of the S3 demo moments on `dev` (`pnpm seed:demo`, then mic → "Mujhe loan mil sakta hai?" → consent → teach-back).
+- Manual check: hold the mic on Home in a real browser and speak.
 
 ## Next up
 
-1. Create the GitHub repo and add CI secrets (see below).
-2. Phase 2 — Sarvam STT/TTS wrappers with cache/timeout/retry, Groq client (needs `GROQ_API_KEY`), prompt loader, intent router, `POST /voice/command`, MicButton.
-3. Set `DEMO_OWNER_EMAIL` and run `pnpm seed:demo` to log in as Ramesh (Sharma General Store).
+1. S4 Khata photo (stretch) or straight to S5 demo hardening: warm TTS cache for the §22 lines (incl. "Aapka score N hai", "har mahine ₹8,851"), phone over HTTPS tunnel, backup video.
+2. Demo-merchant score sanity: run the real seeded Sharma shop through `GET /credit/score` on `dev`; if it lands far from ~700, tune the seed (walk-in ₹61–70k/month, 60% UPI should give ≈ 0.8 × → ₹50,000 offer).
+3. GitHub repo + CI secrets (see below).
 
 ### CI secrets to add in GitHub (Settings → Secrets → Actions)
 
@@ -65,13 +70,13 @@
 - [x] Phase 0 — Repo and tooling
 - [x] Phase 1 — Data, seed, auth
 - [x] Phase 2 — Voice layer + intent router
-- [ ] Phase 3 — Voice capture + ledger/customer screens
-- [ ] Phase 4 — Khata photo capture
-- [ ] Phase 5 — Collect: reminders + mock payments + jobs
-- [ ] Phase 6 — Simulated AI call + promises
-- [ ] Phase 7 — Credit: score, offer, teach-back
+- [x] Phase 3 — Voice capture + ledger/customer screens (S1)
+- [x] Phase 5 — Collect: reminders + mock payments (S2, reminders/pay/button version)
+- [x] Phase 6 — Simulated AI call + promises (S2, polling version)
+- [x] Phase 7 — Credit: score, offer, teach-back (S3)
+- [ ] Phase 4 — Khata photo capture (S4, stretch)
 - [ ] Phase 8 — Polish modules (Ask, brief, UPI mock, Udhaar svc, settings, PWA)
-- [ ] Phase 9 — Deploy and demo hardening
+- [ ] Phase 9 — Deploy and demo hardening (S5)
 
 ## Decisions
 
@@ -94,8 +99,13 @@
 | 2026-10-31 | Migrations via `src/db/migrate.ts` (Drizzle migrator), not `drizzle-kit migrate` | drizzle-kit exited without an error message on Neon; the script prints errors and also suits Render |
 | 2026-10-31 | Language codes: Sarvam BCP-47 + `hi-Latn` for Hinglish | One list in `packages/shared` for onboarding and settings |
 | 2026-10-31 | **Payments: in-app mock by default + Paytm staging as a switch** (`PAYTM_MODE=mock\|staging`) | Mock never depends on Paytm or venue Wi-Fi; staging shows judges a real Paytm checkout. Replaces `PAYTM_MOCK`. Staging needs MID + merchant key (Paytm dashboard → API Keys, test mode). Built in Phase 5 |
+| 2026-10-31 | **Scorecard normalisation bounds** | recovery rate, promise %, digital share, consistency raw 0–1; avg days 0 → 1, ≥ 60 → 0; tenure cap 12 months; concentration 0 → 1, ≥ 0.6 → 0; thin-data factors sit at neutral 0.5 (empty shop ≈ 570, offer line 600 intact) |
+| 2026-10-31 | **Offer amount stepped to spoken-friendly figures** | Down to the nearest ₹5,000 for big offers (₹52,000 → ₹50,000 = the §22 demo line), ₹100 steps + ₹500 floor for small ones so tiny shops don't get "NO_OFFER" |
+| 2026-10-31 | **Consents: latest decision wins** | `activeConsent` reads the newest row per purpose (grant → revoke → re-grant works), not any live row |
 
 ## Gotchas learned
+
+- **Generating code through shell heredocs/template strings ate regex backslashes** (`` became a backspace character, `d` became `d`). Write files with the editor tools, and scan for `` if a regex mysteriously stops matching.
 
 - **drizzle-kit:** a `pgView(...).as(sql...)` *is* emitted into the generated migration (don't also hand-write it). `drizzle-kit migrate` exited 1 with no message on Neon; use `pnpm db:migrate` (`src/db/migrate.ts`). drizzle-kit's config loader has no `import.meta.dirname`, so the config resolves paths from `process.cwd()` (apps/api).
 - **Seed promise realism:** promises always set before the payment date made ~77% "broken"; now ~60% of paying customers name a date they meet.

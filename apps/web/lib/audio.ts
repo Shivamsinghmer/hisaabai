@@ -7,14 +7,13 @@ export function pickRecordingMimeType(): string {
   return candidates.find((type) => MediaRecorder.isTypeSupported(type)) ?? "";
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-
 let current: HTMLAudioElement | null = null;
 
 /** Plays a reply from the API (/media/tts/…); stops any reply already playing. */
 export async function playReply(path: string): Promise<void> {
   current?.pause();
-  current = new Audio(path.startsWith("http") ? path : `${API_URL}${path}`);
+  // /media/* is proxied to the API by next.config.ts.
+  current = new Audio(path);
   try {
     await current.play();
   } catch {

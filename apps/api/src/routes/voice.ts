@@ -8,6 +8,7 @@ import { desc, eq } from "drizzle-orm";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { classifyIntent } from "../agents/intentRouter.js";
 import { handleLedgerCommand } from "../capture/voiceEntry.js";
+import { creditVoiceReply } from "../credit/score.js";
 import type { Db } from "../db/client.js";
 import { getMerchant } from "../db/repos/merchants.js";
 import { customers } from "../db/schema.js";
@@ -128,6 +129,10 @@ export function voiceRoutes(
           confirm: input.confirm,
         });
         ({ replyText, entry, followUp } = result);
+      } else if (routed.intent === "credit" && role === "owner") {
+        // F3.2: "Mujhe loan mil sakta hai?" → spoken score + reason (replyFor's
+        // placeholder stays only for helpers, who get OWNER_ONLY above).
+        replyText = await creditVoiceReply(db, ai, merchant!, req.log);
       }
 
       return {
