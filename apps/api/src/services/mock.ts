@@ -1,6 +1,6 @@
 // AI_MOCK=true: deterministic, offline stand-ins for Sarvam and Groq. Used by
 // tests and as the last-resort demo fallback (BUILD_PLAN "AI_MOCK mode").
-import type { Intent, IntentResult } from "@hisaab/shared";
+import { parseAmountRupees, type ExtractedEntry, type Intent, type IntentResult } from "@hisaab/shared";
 import { cacheKey } from "./cache.js";
 import type { FileStorage } from "./storage.js";
 import type { LlmService, SpeechService } from "./types.js";
@@ -22,6 +22,36 @@ export function mockIntent(text: string): IntentResult {
   if (!text.trim()) return { intent: "other", confidence: 0.2 };
   for (const [intent, re] of RULES) if (re.test(text)) return { intent, confidence: 0.9 };
   return { intent: "other", confidence: 0.5 };
+}
+
+const HONORIFIC_NAME = /\b([a-z]+ (?:ji|jee|didi|di|sahab|saab|bhaiya|bhai|aunty|bhabhi))\b/i;
+
+/** Rule-based stand-in for extract_entry.md (tests, and fallback when Groq is down). */
+export function mockExtract(text: string): ExtractedEntry {
+  const lower = text.toLowerCase();
+  const kind = /\b(hata|cancel|galat)\b/.test(lower)
+    ? "delete_last"
+    : /\b(jama|de diye|de diya|wapas|chuka|chukaya)\b/.test(lower)
+      ? "payment"
+      : /\b(udhaar|udhar|likho|likh do|naam)\b|\d|\bsau\b/.test(lower)
+        ? "credit"
+        : "unknown";
+  const name =
+    text.match(HONORIFIC_NAME)?.[1] ??
+    text
+      .replace(/^naya customer\s+/i, "")
+      .split(/,| ne\b| ka\b| ki\b| ke\b/i)[0]
+      ?.trim() ??
+    null;
+  return {
+    kind,
+    customer_name: name || null,
+    is_new_customer: /\b(naya|nayi) (customer|grahak)\b/.test(lower),
+    amount_rupees: parseAmountRupees(text),
+    items: text.match(/\b(\w+ (?:kilo|kg|packet|litre) \w+)\b/i)?.[1] ?? null,
+    due_phrase: text.match(/\b(\w+ tak|\d+ din mein)\b/i)?.[1] ?? null,
+    confidence: 0.8,
+  };
 }
 
 /** 0.3 s of 8 kHz mono silence, so the client's audio player has something real to play. */
@@ -61,8 +91,9 @@ export function mockSpeech(storage: FileStorage): SpeechService {
 export function mockLlm(): LlmService {
   return {
     async chatJson({ op, user, schema }) {
-      if (op !== "intent_router") throw new Error(`mock LLM has no fixture for op "${op}"`);
-      return schema.parse(mockIntent(user));
+      if (op === "intent_router") return schema.parse(mockIntent(user));
+      if (op === "extract_entry") return schema.parse(mockExtract(user));
+      throw new Error(`mock LLM has no fixture for op "${op}"`);
     },
   };
 }

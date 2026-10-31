@@ -51,10 +51,10 @@ describe("POST /voice/command — typed text", () => {
     expect(body.replyAudioUrl).toMatch(/^\/media\/tts\/[\w-]+\.(mp3|wav)$/);
   });
 
-  it("reads the amount back in the reply", async () => {
+  it("routes capture to the ledger (unknown customer → asks to create)", async () => {
     const { body } = await sayText("Ek sau bees Verma ji ke naam likho");
     expect(body.intent).toBe("capture");
-    expect(body.replyText).toContain("₹120");
+    expect(body.followUp?.question).toBe("Naya customer Verma ji banaun?");
   });
 
   it("answers 'not understood' for small talk", async () => {

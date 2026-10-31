@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         <NavLink href="/" label={t.nav.home} />
         <MicButton />
-        <NavLink href="/me" label={t.nav.account} />
+        <NavLink href="/customers" label={t.nav.khata} />
       </nav>
     </div>
   );

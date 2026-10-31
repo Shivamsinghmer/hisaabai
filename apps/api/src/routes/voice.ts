@@ -1,7 +1,13 @@
-import { TtsBodySchema, VoiceTextBodySchema, type VoiceCommandResponse } from "@hisaab/shared";
+import {
+  TtsBodySchema,
+  VoiceTextBodySchema,
+  type VoiceCommandResponse,
+  type VoiceConfirm,
+} from "@hisaab/shared";
 import { desc, eq } from "drizzle-orm";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { classifyIntent } from "../agents/intentRouter.js";
+import { handleLedgerCommand } from "../capture/voiceEntry.js";
 import type { Db } from "../db/client.js";
 import { getMerchant } from "../db/repos/merchants.js";
 import { customers } from "../db/schema.js";
@@ -15,7 +21,7 @@ import { NOT_UNDERSTOOD, replyFor } from "../voice/handlers.js";
 const MAX_AUDIO_BYTES = 5 * 1024 * 1024; // 30 s of webm/opus is ~200 KB
 const AUDIO_TYPES = /^audio\/(webm|ogg|mp4|mpeg|wav|x-wav|wave|aac|x-m4a)|^video\/webm/;
 
-type Input = { text: string; languageCode: string | null };
+type Input = { text: string; languageCode: string | null; confirm?: VoiceConfirm };
 
 export function voiceRoutes(
   app: FastifyInstance,
@@ -35,7 +41,7 @@ export function voiceRoutes(
   async function readInput(req: FastifyRequest, merchantId: string): Promise<Input> {
     if (!req.isMultipart()) {
       const body = parseBody(VoiceTextBodySchema, req.body);
-      return { text: body.text, languageCode: null };
+      return { text: body.text, languageCode: null, confirm: body.confirm };
     }
     let audio: { data: Buffer; mimeType: string } | null = null;
     let langHint: string | undefined;
@@ -94,15 +100,36 @@ export function voiceRoutes(
           confidence: null,
           replyText: NOT_UNDERSTOOD,
           replyAudioUrl: await speak(NOT_UNDERSTOOD, merchant!.language, req),
+          entry: null,
+          followUp: null,
         };
       }
 
-      const routed = await classifyIntent(ai.llm, input.text, req.log);
-      const replyText = replyFor(routed.intent, input.text, role);
+      // A follow-up answer ("Haan, banao") goes straight back to the ledger.
+      const routed = input.confirm
+        ? { intent: "capture" as const, confidence: 1, fallback: false }
+        : await classifyIntent(ai.llm, input.text, req.log);
       req.log.info(
         { intent: routed.intent, confidence: routed.confidence, fallback: routed.fallback },
         "voice command",
       );
+
+      let replyText = replyFor(routed.intent, input.text, role);
+      let entry: VoiceCommandResponse["entry"] = null;
+      let followUp: VoiceCommandResponse["followUp"] = null;
+      if (routed.intent === "capture" || routed.intent === "payment") {
+        const result = await handleLedgerCommand({
+          db,
+          llm: ai.llm,
+          log: req.log,
+          merchant: merchant!,
+          membership: req.membership!,
+          transcript: input.text,
+          confirm: input.confirm,
+        });
+        ({ replyText, entry, followUp } = result);
+      }
+
       return {
         understood: routed.intent !== "other",
         transcript: input.text,
@@ -111,6 +138,8 @@ export function voiceRoutes(
         confidence: routed.confidence,
         replyText,
         replyAudioUrl: await speak(replyText, merchant!.language, req),
+        entry,
+        followUp,
       };
     },
   );

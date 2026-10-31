@@ -4,7 +4,7 @@ export const t = {
   appName: "Hisaab AI",
   nav: {
     home: ["Ghar", "Home"],
-    account: ["Account", "Account"],
+    khata: ["Khata", "Customers"],
   },
   home: {
     greeting: (name: string) => `Namaste, ${name.split(" ")[0]} ji`,

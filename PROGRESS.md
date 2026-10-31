@@ -3,7 +3,7 @@
 > Living status of the build. Update this file at the end of every work session.
 > Spec: [`CLAUDE.md`](CLAUDE.md) · Plan: [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md)
 
-**Current phase:** Hackathon sprint — Phase 2 done → S1 voice capture → ledger. **Jury demo after ~4 more hours of building** (sprint plan at the top of `docs/BUILD_PLAN.md`)
+**Current phase:** Hackathon sprint — S1 done → S2 Collect (reminders, pay link, AI call sim). **Jury demo after ~4 more hours of building** (sprint plan at the top of `docs/BUILD_PLAN.md`)
 **Last updated:** 2026-10-31
 
 ---
@@ -34,12 +34,14 @@
 | 2026-10-31 | **Phase 1: seed** | `pnpm seed` (50 merchants × 20–60 customers × 6 months, 5 cities, 30/50/20 health mix, festival bumps) and `pnpm seed:demo` (resettable). Deterministic ids; deletes only its own rows. On `dev`: 51 merchants, ~2,100 customers, ~83k entries, promises 57% kept / 35% broken / 8% open. Demo shop: walk-in ₹61–70k/month, 60% UPI; **Gupta ji ₹330** (overdue), Verma ji ₹600, Sharma ji ₹750, Khan sahab ₹1,200 (broken promise) |
 | 2026-10-31 | **Phase 2: voice layer** | AI plumbing (`services/aiCall.ts`: 10 s timeout, 1 retry, Redis cache, logs without personal data), Sarvam STT (`saaras:v4`, mode `translit`, customer names as keyterms) + TTS (`bulbul:v4-flash`, MP3 files named by content hash = cache), Groq JSON mode (`gpt-oss-120b`, reasoning low, zod + one repair), prompt loader (`src/prompts/*.md`, versioned, copied to dist), `AI_MOCK` offline fixtures, intent router (falls back to keyword rules if Groq fails), `POST /voice/command` (audio or typed text), `POST /voice/tts`, `GET /media/tts/:name`. Web: `MicButton` (push-to-talk, waveform, 30 s cap, slide-to-cancel, haptics, keyboard), result sheet with spoken reply, typed fallback |
 | 2026-10-31 | Phase 2 tests | 17 new API tests (mock AI): intents, ₹ read-back, not-understood, audio upload, silence, 415, helper owner-only reply, TTS/media caching, path tricks; aiCall cache/retry/timeout/no-PII logging. **Live test** (`pnpm --filter @hisaab/api test:live`): real Sarvam + Groq, typed loan question → credit + MP3; TTS audio → STT "Gupta ji…" → capture → "₹120" |
+| 2026-10-31 | **S1: voice capture → ledger** | `extract_entry.md` (Groq) + deterministic amount parser wins on amount; fuzzy customer matcher (honorifics, aliases, "Gupta ji" ⊂ "Ramesh Gupta" → ambiguous); follow-ups as tap-to-answer buttons (new customer, which Gupta, duplicate within 2 min, how much, confirm delete); due date from "Friday tak" or default days; spoken reply with new balance. Routes: `GET /customers`, `GET /customers/:id`, `DELETE /ledger/:id` (soft), `GET /summary/today`. Web: entry card with 10 s Undo, follow-up buttons, Khata list (status in words + colour, prediction), customer page (balance, promises, history), Home real numbers |
+| 2026-10-31 | S1 tests | All five F1.2 utterances + follow-ups + reads + cross-shop isolation (mock AI); matcher unit tests. **Live:** spoken "Gupta ji, do kilo chawal, ek sau bees udhaar" → real STT + Groq → "Gupta ji ke khate mein ₹120 udhaar jod diya. Ab kul ₹450 baaki." 59 offline + 2 live API tests pass |
 | 2026-10-31 | Onboarding verified by hand on `dev` | Real sign-in → language (Hinglish) → shop → consent → Home; DB has the shop, owner membership linked to the Neon Auth user, and the `data_storage` consent |
 | 2026-10-31 | **Phase 1: web** | Server-side `lib/api.ts` (mints a JWT per call), `lib/strings.ts` (Hinglish + English), `AppShell` (bottom nav, centre mic slot), Home (redirects to onboarding without a shop), onboarding: language → shop → consent → Home (4 screens incl. sign-in). Signed-out `/`, `/me`, `/onboarding` → sign-in |
 
 ## In progress
 
-- S1: voice capture → ledger (see sprint plan).
+- S2: Collect (see sprint plan).
 - Manual check: hold the mic on Home in a real browser and speak (Phase 2 UI not clicked through yet).
 
 ## Next up

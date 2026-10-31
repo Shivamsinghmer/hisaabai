@@ -1,8 +1,13 @@
 "use client";
 
-import type { VoiceCommandResponse } from "@hisaab/shared";
+import {
+  formatPaise,
+  type FollowUpOption,
+  type VoiceCommandResponse,
+  type VoiceConfirm,
+} from "@hisaab/shared";
 import { useEffect, useRef, useState } from "react";
-import { sendVoiceAudio, sendVoiceText, type VoiceResult } from "@/app/voice-actions";
+import { deleteEntry, sendVoiceAudio, sendVoiceText, type VoiceResult } from "@/app/voice-actions";
 import { pickRecordingMimeType, playReply, stopReply, vibrate } from "@/lib/audio";
 import { t } from "@/lib/strings";
 
@@ -118,9 +123,29 @@ export function MicButton() {
     show(await sendVoiceAudio(form));
   }
 
-  async function submitText(text: string) {
+  async function submitText(text: string, confirm?: VoiceConfirm) {
     setPhase({ kind: "thinking" });
-    show(await sendVoiceText(text));
+    show(await sendVoiceText(text, confirm));
+  }
+
+  async function removeEntry(id: string) {
+    setPhase({ kind: "thinking" });
+    const res = await deleteEntry(id);
+    if (!res.ok)
+      return setPhase({
+        kind: "message",
+        text: ["Entry nahi hat paayi, dobara koshish karein", "Couldn't undo"],
+        typing: false,
+      });
+    const after = res.balancePaise === null ? "" : ` Ab ${formatPaise(res.balancePaise)} baaki.`;
+    setPhase({ kind: "message", text: [`Entry hata di.${after}`, "Entry removed"], typing: false });
+  }
+
+  function answer(option: FollowUpOption) {
+    if (option.deleteEntryId) return void removeEntry(option.deleteEntryId);
+    if (option.text) return void submitText(option.text, option.confirm);
+    stopReply();
+    setPhase({ kind: "idle" });
   }
 
   async function show(result: VoiceResult) {
@@ -183,7 +208,9 @@ export function MicButton() {
             setPhase({ kind: "idle" });
           }}
           onType={() => setPhase({ kind: "message", text: t.voice.typeInstead, typing: true })}
-          onSubmitText={submitText}
+          onSubmitText={(text) => void submitText(text)}
+          onAnswer={answer}
+          onUndo={(id) => void removeEntry(id)}
         />
       )}
       <button
@@ -229,6 +256,8 @@ function VoiceSheet({
   onClose,
   onType,
   onSubmitText,
+  onAnswer,
+  onUndo,
 }: {
   phase: Exclude<Phase, { kind: "idle" }>;
   seconds: number;
@@ -236,6 +265,8 @@ function VoiceSheet({
   onClose: () => void;
   onType: () => void;
   onSubmitText: (text: string) => void;
+  onAnswer: (option: FollowUpOption) => void;
+  onUndo: (entryId: string) => void;
 }) {
   return (
     <section
@@ -275,6 +306,23 @@ function VoiceSheet({
               <p className="w-fit rounded-full bg-neutral-100 px-3 py-1 text-sm font-medium">
                 {phase.data.intent}
               </p>
+            )}
+            {phase.data.entry && <EntryCard entry={phase.data.entry} onUndo={onUndo} />}
+            {phase.data.followUp && phase.data.followUp.options.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {phase.data.followUp.options.map((o) => (
+                  <button
+                    key={o.label}
+                    type="button"
+                    onClick={() => onAnswer(o)}
+                    className={`min-h-12 rounded-lg px-4 text-lg font-semibold ${
+                      o.text || o.deleteEntryId ? "bg-neutral-900 text-white" : "border-2 border-neutral-300"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
             )}
             {!phase.data.understood && <TypeBox onSubmit={onSubmitText} />}
             <div className="flex gap-2">
@@ -329,6 +377,48 @@ function VoiceSheet({
         )}
       </div>
     </section>
+  );
+}
+
+/** The saved entry with a 10-second Undo (F1.2). */
+function EntryCard({
+  entry,
+  onUndo,
+}: {
+  entry: NonNullable<VoiceCommandResponse["entry"]>;
+  onUndo: (entryId: string) => void;
+}) {
+  const [left, setLeft] = useState(10);
+  useEffect(() => {
+    if (left <= 0) return;
+    const id = window.setTimeout(() => setLeft(left - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [left]);
+
+  const isCredit = entry.type === "credit";
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border-2 border-neutral-200 p-3">
+      <div>
+        <p className="font-semibold">{entry.customerName}</p>
+        <p className={`text-2xl font-bold ${isCredit ? "text-red-700" : "text-green-700"}`}>
+          {isCredit ? "+" : "−"}
+          {formatPaise(entry.amountPaise)}{" "}
+          <span className="text-base font-medium">{isCredit ? "udhaar" : "jama"}</span>
+        </p>
+        <p className="text-sm text-neutral-600">
+          Kul baaki (Balance): <strong>{formatPaise(entry.balancePaise)}</strong>
+        </p>
+      </div>
+      {left > 0 && (
+        <button
+          type="button"
+          onClick={() => onUndo(entry.id)}
+          className="min-h-12 shrink-0 rounded-lg border-2 border-neutral-900 px-3 font-semibold"
+        >
+          Undo ({left})
+        </button>
+      )}
+    </div>
   );
 }
 

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { parseEnv } from "node:util";
 import type { VoiceCommandResponse } from "@hisaab/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { customers, ledgerEntries } from "../src/db/schema.js";
 import { createAi } from "../src/services/ai.js";
 import { memoryCache } from "../src/services/cache.js";
 import type { FileStorage } from "../src/services/storage.js";
@@ -45,7 +46,22 @@ describe.skipIf(!live)("voice, live providers", () => {
       headers: bearer(owner),
       payload: validOnboarding,
     });
-    t.track(res.json().merchant.id);
+    const merchantId = res.json().merchant.id;
+    t.track(merchantId);
+    // The demo's Gupta ji: ₹330 due.
+    const [gupta] = await t.db
+      .insert(customers)
+      .values({ merchantId, name: "Gupta ji", aliases: ["Gupta jee", "Suresh Gupta"] })
+      .returning();
+    await t.db.insert(ledgerEntries).values({
+      merchantId,
+      customerId: gupta!.id,
+      type: "credit",
+      amountPaise: 33000,
+      source: "photo",
+      entryDate: "2026-10-10",
+      dueDate: "2026-10-25",
+    });
   }, 60_000);
 
   afterAll(async () => {
@@ -67,7 +83,7 @@ describe.skipIf(!live)("voice, live providers", () => {
     expect(audio.rawPayload.length).toBeGreaterThan(5_000);
   });
 
-  it("spoken capture: TTS audio → STT → router → ₹120 reply", async () => {
+  it("spoken demo line: TTS audio → STT → router → Groq extraction → ledger → 'Ab kul ₹450 baaki'", async () => {
     const tts = await t.app.inject({
       method: "POST",
       url: "/voice/tts",
@@ -85,6 +101,7 @@ describe.skipIf(!live)("voice, live providers", () => {
     const body = res.json<VoiceCommandResponse>();
     expect(body.transcript.toLowerCase()).toContain("gupta");
     expect(body.intent).toBe("capture");
-    expect(body.replyText).toContain("₹120");
+    expect(body.entry).toMatchObject({ customerName: "Gupta ji", amountPaise: 12000, balancePaise: 45000 });
+    expect(body.replyText).toBe("Gupta ji ke khate mein ₹120 udhaar jod diya. Ab kul ₹450 baaki.");
   });
 });

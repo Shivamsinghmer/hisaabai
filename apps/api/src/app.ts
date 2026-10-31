@@ -6,6 +6,7 @@ import type { Redis } from "ioredis";
 import type { Db } from "./db/client.js";
 import { registerErrorHandler } from "./lib/errors.js";
 import { createAuthGuards, type TokenVerifier } from "./plugins/auth.js";
+import { ledgerRoutes } from "./routes/ledger.js";
 import { merchantRoutes } from "./routes/merchants.js";
 import { voiceLimits, voiceRoutes } from "./routes/voice.js";
 import type { FileStorage } from "./services/storage.js";
@@ -61,6 +62,7 @@ export async function buildApp({ db, redis, verifyToken, webOrigin, storage, ai,
   }
 
   merchantRoutes(app, db, guards);
+  ledgerRoutes(app, db, guards);
   voiceRoutes(app, { db, ai: aiServices, storage, guards });
   return app;
 }
