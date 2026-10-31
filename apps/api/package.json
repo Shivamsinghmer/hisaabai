@@ -14,7 +14,8 @@
     "db:studio": "drizzle-kit studio",
     "seed": "tsx --env-file-if-exists=../../.env.local src/seed/index.ts all",
     "seed:demo": "tsx --env-file-if-exists=../../.env.local src/seed/index.ts demo",
-    "test:live": "cross-env LIVE_AI=1 vitest run test/voice.live.test.ts"
+    "test:live": "cross-env LIVE_AI=1 vitest run test/voice.live.test.ts",
+    "demo:smoke": "tsx --env-file-if-exists=../../.env.local src/demo/smoke.ts"
   },
   "dependencies": {
     "@fastify/cors": "11.3.1",

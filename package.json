@@ -18,7 +18,8 @@
     "seed:demo": "pnpm --filter @hisaab/shared build && pnpm --filter @hisaab/api seed:demo",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "demo:smoke": "pnpm seed:demo && pnpm --filter @hisaab/api demo:smoke && pnpm --filter @hisaab/api seed:demo"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

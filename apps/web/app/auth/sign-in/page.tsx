@@ -122,7 +122,10 @@ export default function SignInPage() {
               {error}
             </p>
           )}
-          <button disabled={pending} className="min-h-12 rounded bg-black text-white disabled:opacity-50">
+          <button
+            disabled={pending}
+            className="mono min-h-12 rounded bg-ledger-navy text-[14px] text-white disabled:opacity-50"
+          >
             {pending ? "..." : "Verify karein (Verify)"}
           </button>
         </form>
@@ -160,7 +163,10 @@ export default function SignInPage() {
             {error}
           </p>
         )}
-        <button disabled={pending} className="min-h-12 rounded bg-black text-white disabled:opacity-50">
+        <button
+          disabled={pending}
+          className="mono min-h-12 rounded bg-ledger-navy text-[14px] text-white disabled:opacity-50"
+        >
           {pending ? "..." : isSignUp ? "Sign up" : "Login"}
         </button>
       </form>

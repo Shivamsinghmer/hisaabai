@@ -12,7 +12,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="flex-1 px-4 pt-4 pb-28">{children}</main>
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md items-end justify-around border-t border-neutral-200 bg-white px-4 pt-2 pb-3"
+        className="fixed inset-x-0 bottom-0 mx-auto flex max-w-md items-end justify-around border-t border-rule-gray bg-paper-white px-4 pt-2 pb-3"
       >
         <NavLink href="/" label={t.nav.home} />
         <NavLink href="/customers" label={t.nav.khata} />
@@ -27,7 +27,7 @@ function NavLink({ href, label }: { href: string; label: readonly [string, strin
   return (
     <Link
       href={href}
-      className="flex min-h-12 min-w-16 flex-col items-center justify-center text-sm font-medium"
+      className="mono flex min-h-12 min-w-16 flex-col items-center justify-center text-[12px]"
     >
       {label[0]}
     </Link>

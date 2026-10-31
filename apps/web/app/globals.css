@@ -1,6 +1,134 @@
 @import "tailwindcss";
 
-body {
-  background: #fff;
-  color: #111;
+/*
+ * Design system: "Baselayer — electric ledger in midnight" (design.md).
+ * Light editorial canvas, Ledger Navy product fields, Registry Blue as a signal,
+ * 1px rules instead of shadows, square cards, 4px controls, mono notation.
+ * Mobile app ergonomics stay: ≥48px targets, Hinglish + English labels, status in words.
+ */
+
+@theme {
+  /* Palette */
+  --color-ledger-navy: #09234f;
+  --color-registry-blue: #384ce3;
+  --color-network-teal: #1888a2;
+  --color-paper-white: #ffffff;
+  --color-ink-black: #000000;
+  --color-carbon: #121012;
+  --color-mint-paper: #eff5f0;
+  --color-sky-paper: #c4f0ff;
+  --color-rule-gray: #e5e5e5;
+  --color-steel-rule: #ced3dc;
+  --color-quiet-gray: #595959;
+
+  /* Remap Tailwind's neutrals so existing screens take the palette. */
+  --color-neutral-50: #f7faf8;
+  --color-neutral-100: #eff5f0;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #ced3dc;
+  --color-neutral-400: #8d95a3;
+  --color-neutral-500: #595959;
+  --color-neutral-600: #595959;
+  --color-neutral-700: #2b2f38;
+  --color-neutral-800: #121012;
+  --color-neutral-900: #09234f;
+
+  /* Cards 0px; buttons/links/navigation 4px (applied to controls below). */
+  --radius-xs: 4px;
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+
+  /* No elevation: depth comes from 1px rules and surface contrast. */
+  --shadow-2xs: 0 0 #0000;
+  --shadow-xs: 0 0 #0000;
+  --shadow-sm: 0 0 #0000;
+  --shadow-md: 0 0 #0000;
+  --shadow-lg: 0 0 #0000;
+  --shadow-xl: 0 0 #0000;
+  --shadow-2xl: 0 0 #0000;
+}
+
+/* Font families come from next/font (layout.tsx). */
+@theme inline {
+  --font-sans: var(--font-dm-sans), "Uncut Sans", var(--font-deva), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-cormorant), "Season VF", Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-plex-mono), "Modern Era Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@layer base {
+  :root {
+    --gradient-ledger-navy: linear-gradient(90deg, #09234f 0%, #384ce3 100%);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-paper-white);
+    color: var(--color-ink-black);
+    font-weight: 400;
+  }
+}
+
+/*
+ * Unlayered rules win over Tailwind's utility layer, so these hold everywhere.
+ */
+h1,
+h2,
+.font-display {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.font-display-light {
+  font-weight: 500;
+}
+/* Controls: 4px, never pills. Content cards stay square via the radius tokens. */
+button,
+input,
+select,
+textarea,
+.rounded-full,
+a[class*="min-h-1"],
+a[class*="min-h-2"] {
+  border-radius: 4px;
+}
+:focus-visible {
+  outline: 2px solid var(--color-registry-blue);
+  outline-offset: 2px;
+}
+::selection {
+  background: var(--color-sky-paper);
+  color: var(--color-ink-black);
+}
+
+/* Mono operational notation: eyebrows, tags, nav, buttons. */
+.mono {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+/* Data-grid backdrop: Ledger Navy → Registry Blue field with a low-contrast cross-grid. */
+.grid-field {
+  position: relative;
+  background-color: var(--color-ledger-navy);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px), var(--gradient-ledger-navy);
+  background-size:
+    64px 64px,
+    64px 64px,
+    100% 100%;
+}
+/* Plus-sign registration marks. */
+.plus::before {
+  content: "+";
+  font-family: var(--font-mono);
+  font-weight: 500;
+  line-height: 1;
 }
