@@ -1,0 +1,36 @@
+# Render blueprint for the API (free web service). Render → New → Blueprint → this repo.
+# Secrets are `sync: false`: Render asks for them on first deploy. See docs/DEPLOY.md.
+services:
+  - type: web
+    name: hisaab-api
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @hisaab/shared build && pnpm --filter @hisaab/api build
+    startCommand: pnpm --filter @hisaab/api start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "24"
+      - key: DATABASE_URL
+        sync: false
+      - key: NEON_AUTH_BASE_URL
+        sync: false
+      - key: NEON_AUTH_JWKS_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      # The Vercel URL, e.g. https://hisaabai.vercel.app (CORS + reminder/pay links).
+      - key: WEB_ORIGIN
+        sync: false
+      - key: PAY_LINK_BASE_URL
+        sync: false

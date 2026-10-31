@@ -4,8 +4,8 @@
 // re-running is safe and never touches onboarded shops.
 // Refuses the `production` branch unless `--production` is passed (the demo
 // runs on production, so `pnpm seed:demo -- --production` is allowed).
-// DEMO_OWNER_EMAIL links the demo shop to that Neon Auth user, so they can log
-// in as Ramesh. Without it the demo owner has no login.
+// DEMO_OWNER_EMAIL (comma-separated) links the demo shop to those Neon Auth users, so
+// they can log in as Ramesh. Without it the demo owner has no login.
 import { addDays, todayIst } from "@hisaab/shared";
 import { eq, inArray, sql } from "drizzle-orm";
 import { createDb, type Db } from "../db/client.js";
@@ -61,22 +61,34 @@ async function writeBundle(db: Db, b: SeedBundle) {
   });
 }
 
-async function linkDemoOwner(db: Db, email: string) {
-  const found = await db.execute<{ id: string }>(
-    sql`select id from neon_auth."user" where lower(email) = lower(${email}) limit 1`,
-  );
-  const authUserId = found.rows[0]?.id;
-  if (!authUserId) {
-    console.warn(`DEMO_OWNER_EMAIL: no Neon Auth user with that email on this branch; sign up first.`);
-    return;
+/**
+ * Links each DEMO_OWNER_EMAIL (comma-separated) to the demo shop as an owner. The first
+ * takes the seeded owner row; the rest get owner rows of their own.
+ */
+async function linkDemoOwners(db: Db, emails: string[]) {
+  for (const [i, email] of emails.entries()) {
+    const found = await db.execute<{ id: string }>(
+      sql`select id from neon_auth."user" where lower(email) = lower(${email}) limit 1`,
+    );
+    const authUserId = found.rows[0]?.id;
+    if (!authUserId) {
+      console.warn(
+        `DEMO_OWNER_EMAIL #${i + 1}: no Neon Auth user with that email on this branch; sign up first.`,
+      );
+      continue;
+    }
+    const [existing] = await db.select().from(users).where(eq(users.authUserId, authUserId));
+    if (existing && existing.merchantId !== DEMO_MERCHANT_ID) {
+      console.warn(`DEMO_OWNER_EMAIL #${i + 1} already owns another shop on this branch; not linking.`);
+      continue;
+    }
+    if (i === 0) {
+      await db.update(users).set({ authUserId, email }).where(eq(users.merchantId, DEMO_MERCHANT_ID));
+    } else if (!existing) {
+      await db.insert(users).values({ merchantId: DEMO_MERCHANT_ID, authUserId, email, role: "owner" });
+    }
+    console.log(`demo shop linked to DEMO_OWNER_EMAIL #${i + 1}`);
   }
-  const [existing] = await db.select().from(users).where(eq(users.authUserId, authUserId));
-  if (existing && existing.merchantId !== DEMO_MERCHANT_ID) {
-    console.warn("DEMO_OWNER_EMAIL already owns another shop on this branch; not linking.");
-    return;
-  }
-  await db.update(users).set({ authUserId, email }).where(eq(users.merchantId, DEMO_MERCHANT_ID));
-  console.log("demo shop linked to DEMO_OWNER_EMAIL");
 }
 
 async function main() {
@@ -109,7 +121,11 @@ async function main() {
       .values(DEMO_NETWORK_CONSENTS.map((phone) => ({ phone, granted: true })));
     console.log(`\nbranch ${branch}: ${bundles.reduce((n, b) => n + b.entries.length, 0)} ledger entries`);
 
-    if (process.env.DEMO_OWNER_EMAIL) await linkDemoOwner(db, process.env.DEMO_OWNER_EMAIL);
+    const owners = (process.env.DEMO_OWNER_EMAIL ?? "")
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean);
+    if (owners.length) await linkDemoOwners(db, owners);
 
     // Show the demo shop's key balances so a reset can be eyeballed before a demo.
     const demo = await db
